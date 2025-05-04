@@ -5,7 +5,6 @@ const LOGO: Asset = asset!("/assets/SJF-logo.svg");
 
 #[component]
 pub fn Footer() -> Element {
-    let mut response = use_signal(|| String::new());
 
     rsx! {
         footer {

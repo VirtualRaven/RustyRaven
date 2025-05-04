@@ -1,0 +1,1 @@
+SELECT p.id,p.name,p.price,p.description,p.quantity,p.created,p.updated,p.tags as "product_tag: _" ,p.images from products p;

@@ -1,0 +1,157 @@
+@use 'defines';
+
+body {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+.content {
+    min-height: 100vh;
+}
+
+header {
+    position: sticky;
+    top:0;
+    > div {
+        padding: 1rem;
+        color: #2D3142;
+        background-color: white;
+        border-bottom: 1px solid #EEEEEE;
+        display: flex;
+        align-items: baseline;
+        justify-content: flex-start;
+    }
+    nav, h2 { display: inline-block;}
+    nav {
+        cursor: pointer;
+        &:hover {
+            border-bottom: 2px solid #EF8354;
+        }
+    }
+    h2 {
+        margin:0;
+        margin-left:1rem;
+        color:#EF8354;
+        font-size: xx-large;
+    }
+    ul {
+        list-style-type: none;
+        position: absolute;
+        left:0;
+        margin:0;
+        min-width: 100px;
+        background-color: #2D3142;
+        color: white;
+        transform: scaleY(0);
+        transform-origin: top;
+        transition: transform 0.2s ease;
+        border-top: 2px solid #EF8354;
+        padding: 3rem;
+        min-width: 300px;
+    }
+    li {
+        font-size: x-large;
+        padding:1rem;
+        border-bottom: 2px solid #BFC0C0;
+    }
+    a {
+        text-decoration: none;
+        color:white;
+    }
+}
+ 
+
+
+.cart {
+    display: inline-block;
+    margin-left: auto;
+    padding:1rem;
+}
+
+
+.menu-open {
+    transform: scaleY(1);
+}
+
+footer {
+    background-color: #2D3142;
+    padding:2rem;
+    color:#4F5D75;
+    display: flex;
+    justify-content: flex-start;
+    ul, li {
+        display: inline-block;
+        font-size:larger;
+    }
+    li { margin-right: 1rem;}
+    a {
+        text-decoration: none;
+        color: #4F5D75;
+    }
+    > img {
+        width: 250px;
+        margin-left: auto;
+    }
+}
+
+.close-container {
+    $size: 40px;
+    $width:  $size;
+    $height: $size;
+    margin-top: 1rem;
+    margin-right: 1rem;
+    margin-left: auto;
+    position: relative;
+    width: $width;
+    height: $height;
+    cursor: pointer;
+
+    .leftright, .rightleft {
+        height: 4px;
+        width: $width;
+        position: absolute;
+        margin-top: 20px;
+        background-color: defines.$menu-text-color;
+        border-radius: 2px;
+        transition: all .3s ease-in;
+
+    }
+    .leftright { transform: rotate( 45deg); }
+    .rightleft { transform: rotate(-45deg); }
+
+    &:hover {
+        .leftright, .rightleft { background-color: defines.$tomatored; }
+        .leftright { transform: rotate(-45deg); }   
+        .rightleft { transform: rotate( 45deg); }
+    }
+}
+
+
+button {
+    border: 0.2rem solid defines.$mainbright;
+    color: defines.$mainbright;
+    background: none;
+    padding:1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    &:disabled {
+        color: #efefef !important;
+        border-color: #efefef !important;
+    }
+}
+
+button.red {
+    border-color:defines.$tomatored ;
+    color: defines.$tomatored;
+}
+button.green {
+    border-color:defines.$mossgreen ; 
+    color: defines.$mossgreen;
+}
+
+.flex-start-container 
+{
+    display: flex;
+    align-items: flex-start;
+    :last-child {
+        margin-left: auto;
+    }
+}

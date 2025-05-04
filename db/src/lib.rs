@@ -1,26 +1,29 @@
 
 mod postgres;
-use clap::Parser;
+pub use postgres::{Product,ProductTag,create_product,update_product,get_products};
 
-/// Simple program to greet a person
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Args {
-    /// DB username (password passed via POSTGRES_PASSWORD environment variable)
-    #[arg(long)]
+pub struct DbSettings {
     db_user: String,
-    // Address to postgreSQL server
-    #[arg(long)]
     db_address: String,
-    // Database name
-    #[arg( long)]
-    db_name: String
+    db_name: String,
+    db_password: String
 }
 
 pub async fn init() -> bool
 {
-    let args = Args::parse();
-    if let Err(e) = postgres::init(&args).await
+
+    let settings = DbSettings {
+
+        db_user: { std::env::var("POSTGRES_USER")
+            .expect("POSTGRES_USER environment variable has to be set. ")},
+        db_address: { std::env::var("POSTGRES_ADDRESS")
+            .expect("POSTGRES_ADDRESS environment variable has to be set. ")},
+        db_name: { std::env::var("POSTGRES_DB_NAME")
+            .expect("POSTGRES_DB_NAME environment variable has to be set. ")},
+        db_password: {std::env::var("POSTGRES_PASSWORD")
+            .expect("POSTGRES_PASSWORD environment variable has to be set. ")}
+    };
+    if let Err(e) = postgres::init(&settings).await
     {
         log::error!("Failed to initialize DB connection {:#?}",e);
         return false;

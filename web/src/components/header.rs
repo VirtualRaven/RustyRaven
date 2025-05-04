@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use crate::components::{self, MenuState};
 
 const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
+const MAIN_SCSS: Asset = asset!("/assets/styling/main.scss");
 const RESET_CSS: Asset = asset!("/assets/styling/reset.css");
 
 #[component]
@@ -23,6 +24,7 @@ pub fn Header() -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: RESET_CSS }
         document::Link { rel: "stylesheet", href: MAIN_CSS }
+        document::Link { rel: "stylesheet", href: MAIN_SCSS }
         header {
             div {
                 nav {

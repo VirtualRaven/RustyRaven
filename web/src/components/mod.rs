@@ -23,3 +23,7 @@ mod footer;
 pub use footer::*;
 mod cart;
 pub use cart::Cart;
+mod product;
+pub use product::list::ProductList;
+mod close_button;
+pub use close_button::CloseButton;
