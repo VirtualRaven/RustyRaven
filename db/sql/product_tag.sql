@@ -1,0 +1,1 @@
+CREATE TYPE product_tag AS ENUM ('clothing', 'lamp');
