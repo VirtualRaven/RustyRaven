@@ -2,13 +2,12 @@ use dioxus::prelude::*;
 
 use crate::components::{self, MenuState};
 
-const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 const MAIN_SCSS: Asset = asset!("/assets/styling/main.scss");
 const RESET_CSS: Asset = asset!("/assets/styling/reset.css");
+const HEADER_LOGO: Asset = asset!("/assets/SJF-logo2.svg");
 
 #[component]
 pub fn Header() -> Element {
-
 
 
     let mut menu_state = use_signal(|| MenuState::Closed);
@@ -23,7 +22,6 @@ pub fn Header() -> Element {
 
     rsx! {
         document::Link { rel: "stylesheet", href: RESET_CSS }
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
         document::Link { rel: "stylesheet", href: MAIN_SCSS }
         header {
             div {
@@ -31,10 +29,13 @@ pub fn Header() -> Element {
                     onclick: move |_| {
                         menu_state.with_mut(|state| {*state=state.toggle();} );
                     },
-                    "Menu"
+                    div {},
+                    div {},
+                    div {}
                 }
-                h2 {
-                    "SJF CONCEPT"
+                img {
+                    class: "logo",
+                    src: HEADER_LOGO
                 },
                 components::Cart {}
             },

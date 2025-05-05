@@ -10,20 +10,48 @@ body {
 header {
     position: sticky;
     top:0;
+    background-color: defines.$coolors1;
+    color: white;
     > div {
         padding: 1rem;
-        color: #2D3142;
-        background-color: white;
-        border-bottom: 1px solid #EEEEEE;
         display: flex;
-        align-items: baseline;
+        align-items: center;
         justify-content: flex-start;
     }
     nav, h2 { display: inline-block;}
     nav {
+        $barheight: 0.25rem;
+        height: 2rem;
+        position: relative;
         cursor: pointer;
+
+        > div {
+            top:0;
+            width: 2.5rem;
+            height: $barheight;
+            border-radius: 0.1rem;
+            background-color: defines.$coolors3;
+            transition: all 0.2s ease-in-out;
+            transform: rotate(0deg);
+            &:nth-child(3n+2) {
+                transform: translateY( calc(3 * $barheight - $barheight)   );
+            }
+            &:nth-child(3n) {
+                transform: translateY( calc(6 * $barheight - 2 * $barheight) );
+            }
+        }
+        
         &:hover {
-            border-bottom: 2px solid #EF8354;
+            > div {
+                background-color: #e0e0e0;
+                $inset: 0.2rem;
+                &:nth-child(3n+1) {
+                    transform: translateY( -$inset   );
+                }
+                &:nth-child(3n) {
+                    transform: translateY( calc(6 * $barheight - 2 * $barheight + $inset) );
+                }
+            }
         }
     }
     h2 {
@@ -46,6 +74,7 @@ header {
         border-top: 2px solid #EF8354;
         padding: 3rem;
         min-width: 300px;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
     }
     li {
         font-size: x-large;
@@ -56,6 +85,12 @@ header {
         text-decoration: none;
         color:white;
     }
+    img.logo {
+        height: 40px;
+        padding:0;
+        margin-left:2rem;
+        margin-right:1rem;
+    }
 }
  
 
@@ -64,6 +99,9 @@ header {
     display: inline-block;
     margin-left: auto;
     padding:1rem;
+    > img {
+        height:40px
+    }
 }
 
 

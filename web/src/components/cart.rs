@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use crate::components::MenuState;
 
 
+const CART_ICON: Asset = asset!("/assets/cart.png");
 
 #[component]
 pub fn Cart() -> Element {
@@ -22,8 +23,8 @@ pub fn Cart() -> Element {
     rsx! {
         div {
             class: "cart" ,
-            span {
-                "CART!!!"
+            img {
+                src: CART_ICON
             }
 
             div {
