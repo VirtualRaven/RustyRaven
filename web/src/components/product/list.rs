@@ -52,7 +52,7 @@ pub fn ProductTable(props: ProductTableProps) -> Element
     rsx! {
         table {
             tr {
-                th {"Id"},
+                th {"Artikel nr"},
                 th {"Namn"},
                 th {"Pris"},
                 th {"Kvantitet"}

@@ -1,0 +1,7 @@
+
+CREATE TABLE image_variants (
+    variant_id integer PRIMARY KEY generated always as identity,
+    image_id integer REFERENCES images(image_id),
+    width integer CONSTRAINT positive_width CHECK ( width > 0),
+    height integer CONSTRAINT positive_height CHECK ( height > 0)
+)

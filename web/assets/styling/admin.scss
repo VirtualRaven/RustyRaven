@@ -1,5 +1,7 @@
 @use 'defines';
 
+$inputcolor:#F5F5F5;
+
 #product_editor {
     margin-left:auto;
     margin-right: auto;
@@ -15,6 +17,11 @@
     transform: translateX(-50%);
     min-width: 40vw;
     border-radius: 0.4rem;
+
+    .inputsection {
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
     textarea {
         min-width: 300px;
         min-height: 200px;
@@ -25,16 +32,16 @@
         margin-bottom: 0.4rem;
         color: #444444;
     }
-    input[type=text], textarea
+    input[type=text], textarea, select
     {
         border:none;
-        background-color: #F5F5F5;
+        background-color: $inputcolor;
         padding:1rem;
         &:disabled {
         }
     }
     input[type=checkbox] {
-        margin-right: 0.5rem;
+        margin-left: 0.5rem;
     }
     .button-row {
         margin-top:1rem;
@@ -42,6 +49,17 @@
     button {
         margin-right:0.2rem;
     }
+    .imagesection {
+        display: flex;
+        margin-top:1rem;
+        margin-bottom: 1rem;
+        align-items: flex-start;
+        > div {
+            margin:0.2rem;
+        }
+    }
+
+
 }
 
 #editor_title {
@@ -51,7 +69,7 @@
 }
 
 .content {
-    background-color: #F5F5F5;
+    background-color: $inputcolor;
 }
 .product_list {
     padding:2rem;
@@ -88,6 +106,7 @@ tr {
 }
 
 .overlay  {
+    backdrop-filter: blur(10px);
     width: 100vw;
     height: 100vh;
     position: fixed;
@@ -98,3 +117,140 @@ tr {
     background-color: black;
 }
 
+.imagecontainer {
+    height: 10rem;
+    width: 10rem;
+    background-color: $inputcolor;
+    position: relative;
+    cursor: pointer;
+    > img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    >  div {
+        position: absolute;
+        top:0;
+        left:0;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        opacity: 0;
+        transition: all 0.1s ease-in-out;
+        > div
+        {
+            position: absolute;
+            top:0;
+            left:0;
+            background-color: #777;
+            width: 100%;
+            height: 100%;
+            transform: rotate(45deg) scaleY(5%); 
+        }
+        > div:nth-child(1)
+        {
+            transform: rotate(-45deg) scaleY(5%); 
+        }
+    }
+    &:hover {
+        > div {
+            opacity: 0.6;
+        }
+
+
+
+    }
+
+
+}
+
+.imageuploadcontainer {
+    display: inline-block;
+     label {
+        position: relative;
+        margin-top:0 !important;
+        height: 10rem;
+        width: 10rem;
+        background-color: $inputcolor;
+        display: flex !important;
+        justify-items: center;
+        align-items: center;
+        cursor: pointer;
+        &:hover {
+            background-color: #e0e0e0;
+            div { background-color: #d0d0d0;}
+        } 
+        div {
+            position: absolute;
+            border-radius: 0.2rem;
+            height: 0.4rem;
+            width: 50%;
+            top: 50%;
+            background-color: #e0e0e0;
+            transform:  translateX(50%);
+        }
+        div:nth-child(1) {
+            transform: translateX(50%) rotate(90deg) ;
+
+        }
+        > span {
+            display: none;
+        }
+        &.loading {
+            > span {
+                display: block;
+                margin-left:auto;
+                margin-right: auto;
+            }
+            div {display: none;}
+        }
+
+    }
+    > input {
+        display: none;
+    }
+}
+
+
+
+.loader {
+  $loadercolor: #DDD;
+  width: 48px;
+  height: 12px;
+  margin-top: 40px;
+  background: $loadercolor;
+  display: inline-block;
+  position: relative;
+  &::after {
+    content: '';  
+    left: 50%;
+    top: -47px;
+    transform: translate(-50%, 0);
+    position: absolute;
+    border: 15px solid transparent;
+    border-bottom-color: $loadercolor;
+    box-sizing: border-box;
+    animation: bump 0.4s ease-in-out infinite alternate;
+  }
+  &::before {
+    content: '';  
+    left: 50%;
+    bottom: 15px;
+    transform: translate(-50%, 0);
+    position: absolute;
+    width: 15px;
+    height: 20px;
+    background: $loadercolor;
+    box-sizing: border-box;
+    animation: bump 0.4s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes bump {
+  0% {
+    transform: translate(-50%, 5px);
+  }
+  100% {
+    transform: translate(-50%, -5px);
+  }
+}

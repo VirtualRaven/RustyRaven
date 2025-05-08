@@ -1,9 +1,12 @@
+use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use dioxus::prelude::server_fn::error::NoCustomError;
 use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
-use dioxus::logger::tracing::warn;
+use dioxus::logger::tracing::{info, warn};
+#[cfg(feature="server")]
+use sjf_db as db;
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
 #[serde(bound = "T: Serialize, for<'de2> T: Deserialize<'de2>")]
@@ -30,7 +33,7 @@ pub struct Product {
     pub description: String,
     pub quantity: Option<u16>,
     pub product_tag: Option<Vec<ProductTag>>,
-    pub images: Option<Vec<String>>,
+    pub images: Option<Vec<u32>>,
 }
 
 
@@ -66,12 +69,7 @@ impl From<db::Product> for Product
             }
         };
         let images = {
-            if product.images.is_empty() {
-                None
-            }
-            else {
-                Some(product.images)
-            }
+            Some(product.images)
         };
         Self {
             id: Some(product.id),
@@ -116,7 +114,7 @@ impl From<Product> for db::Product
                     x.into()
                 ).collect()
             },
-            images: product.images.unwrap_or(vec![]),
+            images: product.images.unwrap_or_default()
         }
     }
 }
@@ -144,6 +142,23 @@ pub async fn get_products() -> Result<Vec<Product>,ServerFnError>
     }
 
 }
+
+#[server]
+pub async fn get_product_images(req: AuthenticatedRequest<u32> ) -> Result<BTreeMap<u32,Vec<u32>>,ServerFnError> 
+{
+    use dioxus::prelude::ServerFnError::ServerError;
+    match db::image::get_product_images(req.data.clone()).await
+    {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            warn!("get_product_images({}) failed with {:#?}",req.data,e);
+            Err(ServerError( "get_product_images failed".into()))
+
+        }
+    }
+
+}
+
 #[server]
 pub async fn store_product(req: AuthenticatedRequest<Product> ) -> Result<i32,ServerFnError> 
 {
@@ -174,10 +189,34 @@ pub async fn store_product(req: AuthenticatedRequest<Product> ) -> Result<i32,Se
 
                 } 
             }
-
         }
     }
 
+}
+
+#[server]
+pub async fn upload_images(req: AuthenticatedRequest<Vec<Vec<u8>>>) -> Result<Vec<(u32,u32)>,ServerFnError>
+{
+    info!("Uploading {} images", req.data.len());
+    use sjf_image as image;
+    use futures::future::join_all;
+    
+    let res: Vec<_> = join_all(req.data.into_iter().map(image::upload_image)).await;
+
+    res.iter().filter_map(|x| x.as_ref().err()).for_each(|e| warn!("upoad_images: {:#?}", e) );
+    let sucessful: Vec<_> = res.into_iter().filter_map(|x| x.ok() ).map(|x| x.into() ).collect();
+
+
+    use dioxus::prelude::ServerFnError::ServerError;
+    if sucessful.is_empty()
+    {
+        Err(ServerError("Image processing failed".into()))
+    }
+    else
+    {
+        Ok(sucessful)
+
+    }
 
 
 

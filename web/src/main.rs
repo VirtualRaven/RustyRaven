@@ -4,6 +4,10 @@ use dioxus::{prelude::*};
 
 mod components;
 mod server;
+#[cfg(feature="server")]
+use sjf_image as image;
+#[cfg(feature="server")]
+use sjf_db as db;
 use dioxus::logger::tracing::info;
 
 //const FAVICON: Asset = asset!("/assets/favicon.ico");
@@ -39,6 +43,39 @@ cfg_if::cfg_if! {
 }
 
 #[cfg(feature="server")]
+use axum::extract::Path;
+#[cfg(feature="server")]
+use axum::response::IntoResponse;
+
+#[cfg(feature="server")]
+pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse
+{
+    use axum::http::StatusCode;
+
+
+    let image_id: image::ImageId =  id.into();
+
+    use axum::http::header;
+    match image::get(image_id).await
+    {
+        Some(image) => {
+
+            let headers = [  (header::CONTENT_TYPE,"image/jpeg")];
+
+            Ok((headers, (*image).clone()))
+
+
+        }
+        None => {
+            Err(StatusCode::NOT_FOUND)
+        }
+    }
+}
+
+
+
+
+#[cfg(feature="server")]
 async fn launch_server() {
     // Connect to dioxus' logging infrastructure
     dioxus::logger::initialize_default();
@@ -49,12 +86,21 @@ async fn launch_server() {
     info!("Initializing dioxus...");
     // Connect to the IP and PORT env vars passed by the Dioxus CLI (or your dockerfile)
     let socket_addr =  dioxus::cli_config::fullstack_address_or_localhost();
+    use axum::routing::get;
     use dioxus::fullstack::prelude::DioxusRouterExt;
 
-    let router = axum::Router::new()
-        .serve_dioxus_application(ServeConfigBuilder::new(), App)
-        .into_make_service();
+    let dioxus_router = axum::Router::new()
+        .serve_dioxus_application(ServeConfigBuilder::new(), App);
+    let custom_router= axum::Router::new()
+            .route("/images/:image_id}/:variant_id", get(handle_image_get))
+            .route("/test1/", get(async || format!("hello world")))
+            .route("/test/*key", get(async | Path(id) : Path<(String)> | format!("hello world {id}")));
 
+
+    let router = axum::Router::new()
+        .merge(custom_router)
+        .merge(dioxus_router)
+        .into_make_service();
     let listener = tokio::net::TcpListener::bind(socket_addr).await.unwrap();
     axum::serve(listener, router).await.unwrap();
 }
