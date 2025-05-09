@@ -13,7 +13,7 @@ use crate::server::{AuthenticatedRequest, Product};
 use super::list::ProductList;
 
 #[component]
-pub fn SaveButton( product : Signal<Product>) -> Element {
+pub fn SaveButton( product : Signal<Product>, update_counter: Signal<u32>) -> Element {
 
     enum State {
         Idle,
@@ -81,6 +81,7 @@ pub fn SaveButton( product : Signal<Product>) -> Element {
                         Ok(id) => {
                             product.write().id = Some(id);
                             saving_state.set(State::Saved(product.read().clone()));
+                            update_counter.with_mut(|c| {(*c)+=1;} );
                         },
                         Err(e) => {
                             saving_state.set(State::Error(product.read().clone()) );
@@ -150,7 +151,7 @@ fn ProductInventory(product: Signal<Product> )-> Element
                     },
                     input {
                         type: "checkbox",
-                        initial_value: product.read().quantity.is_some(),
+                        checked: product.read().quantity.is_some(),
                         oninput: move |evt| {
                             info!("checkbox click {}",evt.value());
                             let is_set: bool = evt.value() == "true";
@@ -229,6 +230,9 @@ fn ProductTax(product: Signal<Product>) -> Element {
                 "Moms"
             }
             select {  
+                onchange: move |e| {
+                    product.write().tax_rate = e.value().parse().unwrap();
+                },
                 id: "producttax",
                 option { value: 0,"0%"}
                 option { value: 6,"6%"}
@@ -392,7 +396,8 @@ fn ProductImages(product: Signal<Product> )-> Element
 
 #[derive(PartialEq, Clone, Props)]
 struct FormFieldProps {
-    product: Product
+    product: Product,
+    update_counter: Signal<u32>
 }
 
 
@@ -426,7 +431,7 @@ fn FormFields(props: FormFieldProps) -> Element {
                     },
                     "Ny produkt"
                 }, 
-                SaveButton {  product: product }
+                SaveButton {  product: product, update_counter: props.update_counter }
 
             }
 
@@ -436,7 +441,7 @@ fn FormFields(props: FormFieldProps) -> Element {
 
 
 #[component]
-pub fn ProductDetails( product : Signal<Option<Product>> ) -> Element {
+pub fn ProductDetails( product : Signal<Option<Product>>, update_counter: Signal<u32> ) -> Element {
 
     match &*product.read()
     {
@@ -459,7 +464,7 @@ pub fn ProductDetails( product : Signal<Option<Product>> ) -> Element {
                         onclick: move |_| {product.set(None); },
                     },
                 },
-                FormFields { product: p.clone() }
+                FormFields { product: p.clone(), update_counter }
             }
         }
     }

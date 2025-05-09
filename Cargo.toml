@@ -2,8 +2,6 @@
 resolver = "2"
 members = ["db","web","image"]
 
-[profile]
-
 [profile.wasm-dev]
 inherits = "dev"
 opt-level = 1

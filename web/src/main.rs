@@ -82,6 +82,9 @@ async fn launch_server() {
     
     info!("Initializing db...");
     db::init().await;
+    
+    info!("Initializing object storage...");
+    image::init().await.unwrap();
 
     info!("Initializing dioxus...");
     // Connect to the IP and PORT env vars passed by the Dioxus CLI (or your dockerfile)

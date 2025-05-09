@@ -46,6 +46,7 @@ pub struct Product {
     pub created: DateTime<Utc>,
     pub updated: DateTime<Utc>,
     pub product_tag: Vec<ProductTag>,
+    pub tax_rate: u32,
     pub images: Vec<u32>
 }
 
@@ -62,12 +63,13 @@ pub async fn get_products() -> Result<Vec<Product>,sqlx::Error>
         pub created: DateTime<Utc>,
         pub updated: DateTime<Utc>,
         pub product_tag: Vec<ProductTag>,
+        pub tax_rate: i32,
         pub image_ids: Option<Vec<i32>>
     }
 
     impl From<ProductT> for Product {
         fn from(p: ProductT) -> Self {
-            Product { id: p.id, name: p.name, price: p.price, description: p.description, quantity: p.quantity, created: p.created, updated: p.updated, product_tag: p.product_tag, images: p.image_ids.unwrap_or_default().into_iter().map(|x| x as u32).collect() }
+            Product { id: p.id, name: p.name, price: p.price, description: p.description, quantity: p.quantity, created: p.created, updated: p.updated, product_tag: p.product_tag, tax_rate: p.tax_rate as u32, images: p.image_ids.unwrap_or_default().into_iter().map(|x| x as u32).collect() }
         }
     }
    

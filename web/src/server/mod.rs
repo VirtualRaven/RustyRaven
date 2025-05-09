@@ -34,13 +34,14 @@ pub struct Product {
     pub quantity: Option<u16>,
     pub product_tag: Option<Vec<ProductTag>>,
     pub images: Option<Vec<u32>>,
+    pub tax_rate: u32,
 }
 
 
 
 impl Default for Product {
     fn default() -> Self {
-        Product { id: None, name: String::from(""), price: 0, description: String::from(""), quantity: None, product_tag: None, images: None }
+        Product { id: None, name: String::from(""), price: 0, description: String::from(""), quantity: None, product_tag: None, images: None, tax_rate: 25 }
     }
 }
 
@@ -78,7 +79,8 @@ impl From<db::Product> for Product
             description: product.description,
             quantity: product.quantity.map(|x| x as u16),
             product_tag: tags,
-            images: images
+            images: images,
+            tax_rate: product.tax_rate
         }
     }
 }
@@ -114,7 +116,8 @@ impl From<Product> for db::Product
                     x.into()
                 ).collect()
             },
-            images: product.images.unwrap_or_default()
+            images: product.images.unwrap_or_default(),
+            tax_rate: product.tax_rate
         }
     }
 }

@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use image::ImageError;
+use log::warn;
 use sjf_db as db;
 
 mod thumbnails;
 mod cache;
+mod object_storage;
+pub use object_storage::init_bucket as init;
 
 pub use thumbnails::upload_image;
 
@@ -73,8 +76,31 @@ impl ImageId {
 
 pub async fn get(id: ImageId) -> Option<Arc<Vec<u8>>>
 {
-    cache::get_image(id).await
+    match cache::get_image(id.clone()).await
+    {
+        Some(d) => Some(d) ,
+        None => {
+            match object_storage::get_image(id.clone()).await 
+            {
+                Ok(d) => {
+                    let rsp = Some(Arc::new(d.clone()));
+                    tokio::spawn(
+                        async move {
+                            cache::add_image(id, d)
+                        }
+                    );
+                    rsp
+                },
+                Err(e)=> {
+                    warn!("Image get error {:#?}",e);
+                    None
+                }
+
+            }
+        }
+    }
 }
+
 
 
 

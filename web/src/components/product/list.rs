@@ -1,5 +1,5 @@
 
-use dioxus::logger::tracing::warn;
+use dioxus::logger::tracing::{info, warn};
 use dioxus::prelude::*;
 
 use crate::components::product::product::ProductDetails;
@@ -78,9 +78,11 @@ pub fn ProductList() -> Element {
 
     let mut selected_product: Signal<Option<Product>> = use_signal(|| None);
     let products : Signal<Vec<Product>> = use_signal(|| vec![]);
+    let update_counter : Signal<u32> = use_signal(|| 0);
 
 
     let products= use_resource(move || async move {
+       info!("list update {}",update_counter.read());
        server::get_products().await 
     
     });
@@ -127,7 +129,7 @@ pub fn ProductList() -> Element {
             },
             "Lägg till produkt"
         }
-        ProductDetails {product: selected_product  }
+        ProductDetails {product: selected_product , update_counter }
 
     }}
 }

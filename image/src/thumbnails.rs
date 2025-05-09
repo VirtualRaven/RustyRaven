@@ -1,5 +1,5 @@
 use image::{DynamicImage, ImageDecoder, ImageEncoder, ImageError, ImageReader };
-use log::info;
+use log::{info, warn};
 use std::{collections::VecDeque, io::Write };
 use sjf_db as db;
 
@@ -163,17 +163,16 @@ pub async fn upload_image(bytes: Vec<u8>) -> Result<ImageId,crate::Error>
     let mut image_ids = db::image::insert_image(req).await?;
 
 
-    // Persist the images here
 
 
     let id = { 
-        let id = image_ids.pop().unwrap();
+        let id = image_ids.last().unwrap().clone();
         ImageId {
             image_id: id.image_id as u32,
             variant_id: id.variant_id as u32
         }
     };
-    let data = images.pop().unwrap().data;
+    let data = images.last().unwrap().data.clone();
 
     let result = Ok(id.clone());
 
@@ -182,6 +181,21 @@ pub async fn upload_image(bytes: Vec<u8>) -> Result<ImageId,crate::Error>
     tokio::spawn(
         async move {
             crate::cache::add_image(id, data).await;
+        }
+    );
+
+    tokio::spawn(
+        async move {
+            let iter = image_ids
+                .into_iter()
+                .zip(images.into_iter());
+                for (id,image) in iter {
+                    match crate::object_storage::put_image((id.image_id as u32 ,id.variant_id as u32).into(), &image.data).await
+                    {
+                        Ok(()) => (),
+                        Err(e) => warn!("Image put error {:#?}",e)
+                    }
+                }
         }
     );
 
