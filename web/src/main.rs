@@ -1,3 +1,4 @@
+use components::FrontPage;
 use dioxus::{prelude::*};
 
 //use components::{Echo, Hero};
@@ -60,7 +61,7 @@ pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse
     {
         Some(image) => {
 
-            let headers = [  (header::CONTENT_TYPE,"image/jpeg")];
+            let headers = [  (header::CONTENT_TYPE,"image/jpeg"), (header::CACHE_CONTROL, "max-age: public, max-age=604800, immutable")];
 
             Ok((headers, (*image).clone()))
 
@@ -121,7 +122,8 @@ fn Main() -> Element {
     rsx! {
         components::Header {}
         div {
-            class: "content"
+            class: "content",
+            FrontPage {  }
         }
         components::Footer {}
     }
@@ -132,7 +134,7 @@ fn AdminProduct() -> Element {
         components::Header {}
         div {
             class: "content",
-            components::ProductList {}
+            components::CategoryList  {}
         }
         components::Footer {}
     }

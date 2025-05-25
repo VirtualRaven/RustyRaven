@@ -1,19 +1,21 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
+use std::vec;
 
 use dioxus::html::details::open;
-use dioxus::html::FileEngine;
+use dioxus::html::{image, FileEngine};
 use dioxus::signals::Signal;
 use dioxus::prelude::*;
 use dioxus::logger::tracing::{info, warn};
 
+use crate::components::ImageUploadButton;
 use crate::{components, server};
 use crate::server::{AuthenticatedRequest, Product};
 
 use super::list::ProductList;
 
 #[component]
-pub fn SaveButton( product : Signal<Product>, update_counter: Signal<u32>) -> Element {
+pub fn SaveButton( product : Signal<Product>, update_counter: Signal<u32>, category: ReadOnlySignal<u32> ) -> Element {
 
     enum State {
         Idle,
@@ -24,7 +26,7 @@ pub fn SaveButton( product : Signal<Product>, update_counter: Signal<u32>) -> El
 
 
     let mut saving_state = use_signal(|| State::Idle);
-    let is_unedited = use_memo(move || *product.read() == Default::default() );
+    let is_unedited = use_memo(move || *product.read() == Product::new(category.read().clone()) );
     
 
     let changed_since_saved = use_memo( move || {
@@ -244,96 +246,6 @@ fn ProductTax(product: Signal<Product>) -> Element {
 }
 
 
-#[component]
-fn ImageUploadButton(product: Signal<Product>, thumbnails: Signal<BTreeMap<u32,u32>> )-> Element
-{
-
-    let mut is_loading  = use_signal(|| false);
-
-    let read_files = move |file_engine: Arc<dyn FileEngine>| async move {
-        let files = file_engine.files();
-        let mut file_contents : Vec<Vec<u8>> = Vec::new();
-        file_contents.reserve(files.len());
-
-        for file_name in &files {
-            if let Some(contents) = file_engine.read_file(file_name).await {
-                info!("Read {} {}", file_name,contents.len());
-                file_contents.push(contents);
-            }
-            else {
-                info!("Failed to read {}",file_name);
-            }
-        }
-
-        if !file_contents.is_empty()
-        {
-            is_loading.set(true);
-            let resp = server::upload_images( 
-                AuthenticatedRequest {
-                    data: file_contents
-                }
-            ).await;
-            is_loading.set(false);
-            info!("Server responded with {:#?}",resp);
-            
-            match resp {
-                Ok(mut images) => {
-                    
-                    let mut image_ids: Vec<_> = images.iter().map(|(a,_)| a.clone()).collect();
-                    images.into_iter().for_each(
-                        |(image,variant)| {
-                            thumbnails.write().insert(image,variant);
-                        }
-                    );
-
-                    let updated_images = match product.write().images.take() {
-                        Some(mut existing_images) => {
-                            existing_images.append(&mut image_ids);
-
-
-                            existing_images
-                        }
-                        None=> image_ids
-                    };
-
-                    product.write().images=Some(updated_images);
-
-                },
-                Err(e) => {
-
-                }
-            }
-        }
-
-
-    };
-    let upload_file = move |evt: FormEvent| async move {
-        if let Some(file_engine) = evt.files() {
-            read_files(file_engine).await;
-        }
-    };
-    rsx! {
-        div {
-            class: "imageuploadcontainer",
-            label {
-                class: if *is_loading.read() { "loading"},
-                for: "fileupload",
-                div {}
-                div {}
-                span { class: "loader"}
-            }
-            input {
-                disabled: if *is_loading.read() {"true"},
-                id:"fileupload",
-                type:"file",
-                accept: "image/*",
-                multiple: true,
-                onchange: upload_file
-            }
-
-        }
-    }
-}
 
 #[component]
 fn ProductImage(image_id: u32, product: Signal<Product>, thumbnails: Signal<BTreeMap<u32,u32>>)-> Element {
@@ -363,9 +275,10 @@ fn ProductImages(product: Signal<Product> )-> Element
 {
     let mut thumbnails: Signal<BTreeMap<u32, u32>> = use_signal(move || BTreeMap::new());
 
+    let product_id = use_memo(move || product.read().id ); 
     let resource = use_resource(move || async move
     {
-        if let Some(id)= product.read().id
+        if let Some(id)= product_id.read().clone()
         {
             if let Ok(v)= server::get_product_images( AuthenticatedRequest { data: (id as u32) } ).await
             {
@@ -379,6 +292,37 @@ fn ProductImages(product: Signal<Product> )-> Element
     }
     );
 
+    let thumbnail_ids : Memo<BTreeSet<u32>>= use_memo(move ||thumbnails.read().keys().cloned().collect() );
+    let thumbnails_have_changed = use_memo(move || {
+        let empty = BTreeSet::new();
+        let lh =  &*thumbnail_ids.read() ;
+        let product = product.read();
+        let rh = product.images.as_ref().unwrap_or(&empty);
+        let res = lh != rh;
+        res
+
+       });
+    use_effect(move  || {
+        if (thumbnail_ids.read().is_empty() )
+        {
+            return;
+        }
+
+        let mut image_ids = thumbnail_ids.read().iter().cloned().collect();
+        
+        if *thumbnails_have_changed.read()
+        {
+            let updated_images = match product.write().images.take() {
+                Some(mut existing_images) => {
+                    existing_images.append(&mut image_ids);
+                    existing_images
+                }
+                None=> image_ids
+            };
+            product.write().images=Some(updated_images);
+        }
+    });
+
     rsx!{
         div {
             class: "imagesection",
@@ -388,7 +332,7 @@ fn ProductImages(product: Signal<Product> )-> Element
                     ProductImage {image_id: *image, product , thumbnails }
                 }
             },
-            ImageUploadButton {product, thumbnails }
+            ImageUploadButton { thumbnails, multiple: true }
         }
     }
 }
@@ -397,7 +341,8 @@ fn ProductImages(product: Signal<Product> )-> Element
 #[derive(PartialEq, Clone, Props)]
 struct FormFieldProps {
     product: Product,
-    update_counter: Signal<u32>
+    update_counter: Signal<u32>,
+    category: ReadOnlySignal<u32>
 }
 
 
@@ -427,11 +372,12 @@ fn FormFields(props: FormFieldProps) -> Element {
                 button {
                     disabled: product.read().id.is_none(),
                     onclick: move |_| {
-                        product.set(Default::default())
+                        product.set(Product::new(props.category.read().clone()))
+                        
                     },
                     "Ny produkt"
                 }, 
-                SaveButton {  product: product, update_counter: props.update_counter }
+                SaveButton {  product: product, update_counter: props.update_counter, category: props.category }
 
             }
 
@@ -441,7 +387,7 @@ fn FormFields(props: FormFieldProps) -> Element {
 
 
 #[component]
-pub fn ProductDetails( product : Signal<Option<Product>>, update_counter: Signal<u32> ) -> Element {
+pub fn ProductDetails( product : Signal<Option<Product>>, update_counter: Signal<u32>, category: ReadOnlySignal<u32> ) -> Element {
 
     match &*product.read()
     {
@@ -464,7 +410,7 @@ pub fn ProductDetails( product : Signal<Option<Product>>, update_counter: Signal
                         onclick: move |_| {product.set(None); },
                     },
                 },
-                FormFields { product: p.clone(), update_counter }
+                FormFields { product: p.clone(), update_counter,category }
             }
         }
     }

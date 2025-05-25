@@ -3434,9 +3434,18 @@ dependencies = [
  "futures",
  "pretty_env_logger",
  "serde",
+ "sjf_api",
  "sjf_db",
  "sjf_image",
  "tokio",
+]
+
+[[package]]
+name = "sjf_api"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde",
 ]
 
 [[package]]
@@ -3447,6 +3456,7 @@ dependencies = [
  "log",
  "once_cell",
  "serde",
+ "sjf_api",
  "sqlx",
  "tokio",
 ]

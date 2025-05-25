@@ -1,5 +1,5 @@
 SELECT 
-    p.id,p.name,p.price,p.description,p.quantity,p.created,p.updated,p.tags as "product_tag: _", image_ids, tax_rate
+    p.id,p.name,p.price,p.description,p.quantity,p.created,p.updated,p.tags as "product_tag: _", image_ids, tax_rate,category
 from products p 
 LEFT JOIN 
     (
@@ -9,4 +9,5 @@ LEFT JOIN
         GROUP BY product_id
     ) AS I 
 ON p.id = i.product_id 
+WHERE category = $1
 ORDER BY p.name ASC

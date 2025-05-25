@@ -5,8 +5,9 @@ edition = "2024"
 
 [dependencies]
 chrono = { version = "0.4.41", features = ["serde"] }
-log = "0.4.27"
 once_cell = "1.21.3"
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { workspace=true }
+log = {workspace=true }
+sjf_api = {path="../api"}
 sqlx = { version = "0.8", features = [ "runtime-tokio", "tls-rustls-ring-webpki", "postgres","chrono" ] }
 tokio = { version = "1", features = ["rt", "macros","net","rt-multi-thread"] }

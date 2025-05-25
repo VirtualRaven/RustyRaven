@@ -21,6 +21,12 @@ pub fn Footer() -> Element {
                         "@sjfconcept"
                     }
                 }
+                li {
+                    a {
+                        href: "/admin/products",
+                        "Inloggning"
+                    }
+                }
             },
             img {
                 src: LOGO

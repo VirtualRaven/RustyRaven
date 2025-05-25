@@ -2,8 +2,7 @@
 use dioxus::logger::tracing::{info, warn};
 use dioxus::prelude::*;
 
-use crate::components::product::product::ProductDetails;
-const ADMIN_CSS: Asset = asset!("/assets/styling/admin.scss");
+use crate::components::admin::product::product::ProductDetails;
 
 use crate::server::{self, Product};
 
@@ -74,7 +73,7 @@ pub fn ProductTable(props: ProductTableProps) -> Element
 }
 
 #[component]
-pub fn ProductList() -> Element {
+pub fn ProductList(category: ReadOnlySignal<u32>) -> Element {
 
     let mut selected_product: Signal<Option<Product>> = use_signal(|| None);
     let products : Signal<Vec<Product>> = use_signal(|| vec![]);
@@ -83,7 +82,7 @@ pub fn ProductList() -> Element {
 
     let products= use_resource(move || async move {
        info!("list update {}",update_counter.read());
-       server::get_products().await 
+       server::get_products(category.read().clone()).await 
     
     });
 
@@ -92,20 +91,19 @@ pub fn ProductList() -> Element {
     let mut inspector = use_signal(|| false);
 
     rsx! {
-        document::Link { rel: "stylesheet", href: ADMIN_CSS }
 
         div {
             class: "product_list",
-        h2 {
-            "Produkt katalog"
-        }
         match &*products.read_unchecked() {
             Some(Ok(products)) => rsx! {
-                ProductTable{
-                    onedit: move |product| {
-                        selected_product.set(Some(product));
-                    },
-                    products: products.clone()
+                if products.len() > 0 
+                {
+                    ProductTable{
+                        onedit: move |product| {
+                            selected_product.set(Some(product));
+                        },
+                        products: products.clone()
+                    }
                 }
             },
             Some(Err(e)) =>  {
@@ -124,12 +122,12 @@ pub fn ProductList() -> Element {
 
         button {
             onclick: move |_| {
-                selected_product.set(Some(Default::default()) );
+                selected_product.set(Some(Product::new(category.read().clone())) );
 
             },
             "Lägg till produkt"
         }
-        ProductDetails {product: selected_product , update_counter }
+        ProductDetails {product: selected_product , update_counter,category }
 
     }}
 }

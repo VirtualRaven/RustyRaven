@@ -2,10 +2,11 @@ use std::collections::HashSet;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sjf_api::category;
 use sqlx::{database, postgres::{PgHasArrayType, PgPoolOptions},query, query_file, query_file_as, Pool, Postgres};
 use once_cell::sync::OnceCell;
 
-static POOL: OnceCell<Pool<Postgres>> = OnceCell::new();
+pub (crate) static POOL: OnceCell<Pool<Postgres>> = OnceCell::new();
 
 pub async fn init(args: &crate::DbSettings) -> Result<(),sqlx::Error>
 {
@@ -24,130 +25,18 @@ pub async fn init(args: &crate::DbSettings) -> Result<(),sqlx::Error>
         .connect(&url).await?;
 
     POOL.set(pool).unwrap();
+
+    image::update_image_view(POOL.get().unwrap(), true).await?;
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Debug, sqlx::Type)]
-#[sqlx(type_name = "product_tag", rename_all = "lowercase")] 
-pub enum ProductTag {
-    Clothing,
-    Lamp
-}
-
-
-#[derive(Debug, sqlx::FromRow, Deserialize, Serialize)]
-pub struct Product {
-
-    pub id: i32,
-    pub name: String, //VARCHAR(100)
-    pub price: i32,
-    pub description: String,
-    pub quantity: Option<i32>,
-    pub created: DateTime<Utc>,
-    pub updated: DateTime<Utc>,
-    pub product_tag: Vec<ProductTag>,
-    pub tax_rate: u32,
-    pub images: Vec<u32>
-}
-
-pub async fn get_products() -> Result<Vec<Product>,sqlx::Error>
-{
-    #[derive(Debug, sqlx::FromRow, Deserialize, Serialize)]
-    pub struct ProductT {
-
-        pub id: i32,
-        pub name: String, //VARCHAR(100)
-        pub price: i32,
-        pub description: String,
-        pub quantity: Option<i32>,
-        pub created: DateTime<Utc>,
-        pub updated: DateTime<Utc>,
-        pub product_tag: Vec<ProductTag>,
-        pub tax_rate: i32,
-        pub image_ids: Option<Vec<i32>>
-    }
-
-    impl From<ProductT> for Product {
-        fn from(p: ProductT) -> Self {
-            Product { id: p.id, name: p.name, price: p.price, description: p.description, quantity: p.quantity, created: p.created, updated: p.updated, product_tag: p.product_tag, tax_rate: p.tax_rate as u32, images: p.image_ids.unwrap_or_default().into_iter().map(|x| x as u32).collect() }
-        }
-    }
-   
-
-    let res : Vec<_> =query_file_as!(ProductT,"sql/all_products.sql")
-        .fetch_all(POOL.get().unwrap())
-        .await?
-        .into_iter()
-        .map(|x| x.into())
-        .collect();
-    Ok(res)
-
-
-}
-
-pub async fn create_product(product: Product ) -> Result<i32, sqlx::Error>
-{
-    let mut tx = POOL.get().unwrap().begin().await?;
-
-    let query = query_file!("sql/create_product.sql",
-    product.name,
-    product.price,
-    product.description,
-    product.quantity,
-    product.product_tag as _,
-    )
-    .fetch_one(&mut *tx)
-    .await?;
-
-    for image in product.images
-    {
-        query!("INSERT INTO product_images (product_id,image_id) VALUES ($1,$2)",query.id,image as i32)
-        .execute(&mut *tx)
-        .await?;
-    }
-
-    tx.commit().await?;
-
-
-    Ok(query.id)
-}
-pub async fn update_product(product: Product ) -> Result<(), sqlx::Error>
-{
-    let mut tx = POOL.get().unwrap().begin().await?;
-
-
-
-    let query = query_file!("sql/update_product.sql",
-    product.name,
-    product.price,
-    product.description,
-    product.quantity,
-    product.product_tag as _,
-    product.id)
-    .execute (&mut *tx)
-    .await?;
-
-    query!("DELETE from product_images where product_id=$1",product.id)
-    .execute(&mut *tx)
-    .await?;
-    
-    for image in product.images
-    {
-        query!("INSERT INTO product_images (product_id,image_id) VALUES ($1,$2)",product.id,image as i32)
-        .execute(&mut *tx)
-        .await?;
-    }
-
-    tx.commit().await?;
-
-    Ok(())
-}
 
 pub mod image {
 
     use std::collections::BTreeMap;
 
-    use sqlx::{query, query_as};
+    use log::error;
+    use sqlx::{query, query_as, Executor};
 
     use super::*;
 pub struct ImageInsertVariant {
@@ -207,5 +96,29 @@ pub async fn get_image_variants(image_id: u32) -> Result<Vec<u32>,sqlx::Error>
     Ok(res)
 }
 
+pub async fn update_image_view<'c,E>( e : E, create: bool  ) -> Result<(),sqlx::Error> 
+where E: Copy + Executor<'c, Database = Postgres>,
+{
+    if (create)
+    {
+        query_file!("sql/materialized_image_view.sql").execute(e).await?;
+        query!("CREATE UNIQUE INDEX IF NOT EXISTS product_image_info_index  on product_image_info (product_id)").execute(e).await?;
+    }
+
+    query!("REFRESH MATERIALIZED VIEW CONCURRENTLY product_image_info").execute(e).await?;
+    Ok(())
+}
+
+pub fn update_image_view_later() 
+{
+    tokio::spawn(async {
+        let res = update_image_view(POOL.get().unwrap(), false).await;
+        if let Err(e) = res
+        {
+            error!("Image view update failed! {:#?}",e);
+        }
+
+    });
+}
 
 }

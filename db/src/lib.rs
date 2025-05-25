@@ -1,6 +1,9 @@
 
 mod postgres;
-pub use postgres::{Product,ProductTag,create_product,update_product,get_products};
+
+pub mod category;
+pub mod product;
+pub use product::*;
 pub use postgres::image as image;
 pub use sqlx::Error as Error;
 
