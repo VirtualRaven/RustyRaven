@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::category;
+
 
 #[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
 pub struct ImageVariant 
@@ -29,13 +31,39 @@ impl Image {
     }
 }
 
+
+#[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
+pub struct Product
+{
+    pub id: u32,
+    pub name: String,
+    pub description: String,
+    pub category_name: Vec<String>, 
+    pub price: u32,
+    pub images: Vec<Image>
+}
+
 #[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
 pub struct Preview
 {
     pub id: u32,
     pub name: String,
+    pub category_name: Vec<String>, 
     pub price: u32,
     pub images: Vec<Image>
+}
+
+impl Preview {
+    pub fn product_url(&self) -> String 
+    {
+        assert!(!self.category_name.is_empty());
+        let cat = self.category_name.iter().map(|x| urlencoding::encode(x) ).fold(String::from("/produkter"),|acc,s| {
+            acc + "/" + &s
+        } );
+
+        cat + "/" + &self.id.to_string()
+
+    }
 }
 
 
@@ -56,3 +84,11 @@ pub struct GetPreviewsResp
 
 
 }
+
+#[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
+pub struct  GetProductRequest 
+{
+    pub product_id: u32,
+}
+
+pub type GetProductResponse = Product;

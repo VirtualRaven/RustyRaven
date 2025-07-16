@@ -17,6 +17,8 @@ tokio = { version = "1", features = ["rt", "macros","net","rt-multi-thread"],opt
 axum = {version="0.7.9",optional=true}
 serde = { workspace=true }
 futures = {version="0.3.31", optional=true}
+rand = "0.9.1"
+getrandom = { version = "0.3.3", features = ["wasm_js"] }
 
 [features]
 default = ["web"]

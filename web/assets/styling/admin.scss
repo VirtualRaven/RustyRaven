@@ -1,6 +1,5 @@
 @use 'defines';
 
-$inputcolor:#F5F5F5;
 
 #product_editor {
     margin-left:auto;
@@ -35,7 +34,7 @@ $inputcolor:#F5F5F5;
     input[type=text], textarea, select
     {
         border:none;
-        background-color: $inputcolor;
+        background-color: defines.$inputcolor;
         padding:1rem;
         &:disabled {
         }
@@ -68,9 +67,6 @@ $inputcolor:#F5F5F5;
     }
 }
 
-.content {
-    background-color: $inputcolor;
-}
 .product_list {
     padding:2rem;
     display: inline-block;
@@ -120,7 +116,7 @@ tr {
 .imagecontainer {
     height: 10rem;
     width: 10rem;
-    background-color: $inputcolor;
+    background-color: defines.$inputcolor;
     position: relative;
     cursor: pointer;
     > img {
@@ -171,7 +167,7 @@ tr {
         margin-top:0 !important;
         height: 10rem;
         width: 10rem;
-        background-color: $inputcolor;
+        background-color: defines.$inputcolor;
         display: flex !important;
         justify-items: center;
         align-items: center;

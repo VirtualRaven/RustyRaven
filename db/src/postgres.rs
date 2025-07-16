@@ -27,6 +27,7 @@ pub async fn init(args: &crate::DbSettings) -> Result<(),sqlx::Error>
     POOL.set(pool).unwrap();
 
     image::update_image_view(POOL.get().unwrap(), true).await?;
+    crate::category::update_paths_view(POOL.get().unwrap(), true).await?;
     Ok(())
 }
 

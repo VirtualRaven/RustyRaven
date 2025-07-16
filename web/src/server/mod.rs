@@ -274,12 +274,22 @@ pub async fn update_name(req: AuthenticatedRequest<(u32,String)>) -> Result<(),S
 
 use sjf_api::product::{GetPreviewsRequest, GetPreviewsResp};
 #[server(endpoint="get_previews",input=dioxus::prelude::server_fn::codec::GetUrl)]
-pub async fn get_previews( p: Option<u32>, r: bool) -> Result<GetPreviewsResp,ServerFnError>
+pub async fn get_previews( p: Option<u32>, r: bool, limit: u32) -> Result<GetPreviewsResp,ServerFnError>
 {
     let r = GetPreviewsRequest {
         recursive: r,
         category: p,
-        limit:100
+        limit:  std::cmp::min(100, limit)
     };
     error_logger( db::product::get_previews(r).await)
+}
+
+use sjf_api::product::{GetProductRequest, GetProductResponse};
+#[server(endpoint="get_product",input=dioxus::prelude::server_fn::codec::GetUrl)]
+pub async fn get_product( p: u32 ) -> Result<GetProductResponse,ServerFnError>
+{
+    let r = GetProductRequest {
+        product_id: p
+    };
+    error_logger( db::product::get_product(r).await)
 }

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sjf_api::{category, product::{GetPreviewsRequest, GetPreviewsResp, Preview}};
+use sjf_api::{category, product::{GetPreviewsRequest, GetPreviewsResp, Preview,Product as ApiProduct,GetProductRequest,GetProductResponse}};
 use sqlx::{database, postgres::{PgHasArrayType, PgPoolOptions},query, query_file, query_file_as, Pool, Postgres};
 use crate::postgres::POOL;
 
@@ -133,32 +133,33 @@ pub async fn update_product(product: Product ) -> Result<(), sqlx::Error>
 
 
 
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "image_variant")]
+struct ImageVariant {
+    width: i32,
+    height: i32,
+    variant: i32,
+}
+
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "image_info_type")]
+struct ImageInfo {
+    id: i32,
+    avg_color: String,
+    variants: Vec<ImageVariant>
+}
 
 pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp,sqlx::Error>
 {   
     let categories = crate::category::get_child_categories(req.category, req.recursive, POOL.get().unwrap()).await?;
     
-    #[derive(sqlx::Type)]
-    #[sqlx(type_name = "image_variant")]
-    struct ImageVariant {
-        width: i32,
-        height: i32,
-        variant: i32,
-    }
-
-    #[derive(sqlx::Type)]
-    #[sqlx(type_name = "image_info_type")]
-    struct ImageInfo {
-        id: i32,
-        avg_color: String,
-        variants: Vec<ImageVariant>
-    }
 
     struct  T {
-        id: i32,
-        price: i32,
-        name: String,
-        images: Option<Vec<ImageInfo>>
+        id: Option<i32>,
+        price: Option<i32>,
+        name: Option<String>,
+        images: Option<Vec<ImageInfo>>,
+        names: Option<Vec<String>>,
     };
 
     let q = query_file_as!(T,"sql/get_previews.sql",&categories,req.limit as i32 )
@@ -170,9 +171,9 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp,sql
     let result =  q.into_iter().map(|t|  {
         Preview 
         {
-            id: t.id as u32,
-            name: t.name,
-            price: t.price as u32,
+            id: t.id.unwrap() as u32,
+            name: t.name.unwrap(),
+            price: t.price.unwrap() as u32,
             images: t.images.unwrap_or_default().into_iter().map( |i|
             {
                 sjf_api::product::Image {
@@ -185,12 +186,60 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp,sql
                         }
                     } ).collect()
                 }
-            }).collect()
+            }).collect(),
+            category_name: t.names.unwrap()
         }
     } ).collect();
 
     Ok(
         GetPreviewsResp { previews: result }
+    )
+
+}
+
+pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sqlx::Error>
+{   
+    
+    struct  T {
+        id: Option<i32>,
+        price: Option<i32>,
+        description: Option<String>,
+        name: Option<String>,
+        images: Option<Vec<ImageInfo>>,
+        names: Option<Vec<String>>,
+    };
+
+    let t = query_file_as!(T,"sql/get_product.sql", req.product_id as i32 )
+    .fetch_one(POOL.get().unwrap())
+    .await?;
+
+
+
+    let result = 
+        ApiProduct 
+        {
+            id: t.id.unwrap() as u32,
+            name: t.name.unwrap(),
+            description: t.description.unwrap(),
+            price: t.price.unwrap() as u32,
+            images: t.images.unwrap_or_default().into_iter().map( |i|
+            {
+                sjf_api::product::Image {
+                    color: i.avg_color,
+                    sizes: i.variants.into_iter().map(|v| {
+                        sjf_api::product::ImageVariant {
+                            width: v.width as u32,
+                            height: v.height as u32,
+                            url: format!("/images/{}/{}",i.id,v.variant)
+                        }
+                    } ).collect()
+                }
+            }).collect(),
+            category_name: t.names.unwrap()
+        };
+
+    Ok(
+        result 
     )
 
 }

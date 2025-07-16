@@ -32,3 +32,7 @@ mod image_upload;
 pub use image_upload::ImageUploadButton;
 mod front_page;
 pub use front_page::FrontPage;
+mod product;
+pub use product::*;
+mod category_bar;
+pub use category_bar::*;

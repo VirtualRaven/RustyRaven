@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 serde = { workspace=true }
 log = {workspace=true }
+urlencoding = "2.1.3"

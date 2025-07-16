@@ -1,10 +1,13 @@
 use dioxus::{logger::tracing::info, prelude::*};
+use sjf_api::category::GetChildrenRsp;
 
 use crate::{components::{self, MenuState}, server};
 
 const MAIN_SCSS: Asset = asset!("/assets/styling/main.scss");
 const RESET_CSS: Asset = asset!("/assets/styling/reset.css");
 const HEADER_LOGO: Asset = asset!("/assets/SJF-logo2.svg");
+
+pub type CategorySignal = Signal<Option<GetChildrenRsp>>;
 
 
 #[component]
@@ -13,6 +16,17 @@ pub fn DynamicMenu() -> Element
     let categories = use_resource(|| async move {
         server::category::get_children(None).await
     });
+
+
+    let mut context = use_context::<CategorySignal>();
+    
+    use_effect(move || {
+        if let Some(Ok(ref rsp)) = *categories.read()
+        {
+            *context.write() = Some(rsp.clone());
+        }
+    });
+
 
     info!("{:#?}", categories);
 
@@ -81,13 +95,13 @@ pub fn Header() -> Element {
             ul {  
                 class: "menu {menu_class}",
                 li { 
-                    Link {to: crate::Route::Main {}, "Hem" }
+                    Link {to: crate::Route::FrontPage {}, "Hem" }
                 }
 
                 DynamicMenu {}
 
                 li { 
-                    Link {to: crate::Route::Main {}, "Om SJF" }
+                    Link {to: crate::Route::FrontPage {}, "Om SJF" }
                 }
             }
         }

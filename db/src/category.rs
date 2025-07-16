@@ -1,5 +1,6 @@
+use log::error;
 use sjf_api::category::{CreateReq,CreateRsp, GetChildrenRsp};
-use sqlx::{query, query_as, Executor, Postgres};
+use sqlx::{query, query_as,query_file, Executor, Postgres};
 use crate::postgres::POOL;
 
 pub async fn create(req: CreateReq ) -> Result<CreateRsp,sqlx::Error>
@@ -36,6 +37,7 @@ pub async fn create(req: CreateReq ) -> Result<CreateRsp,sqlx::Error>
 
 
     tx.commit().await?;
+    update_paths_view_later();
     Ok(CreateRsp { id: res.id as u32, depth: depth as u32})
 }
 
@@ -102,7 +104,33 @@ pub async fn update_name(id: u32, name: String) -> Result<(),sqlx::Error>
     query!("UPDATE product_categories SET name=$1 where id=$2 RETURNING ID",name,id as i32)
     .fetch_one(POOL.get().unwrap())
     .await?;
+    update_paths_view_later();
 
     Ok(())
 }
 
+
+pub(crate) async fn update_paths_view<'c,E>( e : E, create: bool  ) -> Result<(),sqlx::Error> 
+where E: Copy + Executor<'c, Database = Postgres>,
+{
+    if (create)
+    {
+        query_file!("sql/materialized_product_paths.sql").execute(e).await?;
+        query!("CREATE UNIQUE INDEX IF NOT EXISTS product_paths_index  on product_paths (id)").execute(e).await?;
+    }
+
+    query!("REFRESH MATERIALIZED VIEW CONCURRENTLY product_paths").execute(e).await?;
+    Ok(())
+}
+
+pub(crate) fn update_paths_view_later() 
+{
+    tokio::spawn(async {
+        let res = update_paths_view(POOL.get().unwrap(), false).await;
+        if let Err(e) = res
+        {
+            error!("Path view update failed! {:#?}",e);
+        }
+
+    });
+}

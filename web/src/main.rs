@@ -14,13 +14,31 @@ use dioxus::logger::tracing::info;
 //const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 
+use crate::components::CategoryList;
 #[derive(Routable, PartialEq, Clone)]
 pub enum Route {
-    // if the current location is "/home", render the Home component
+    #[layout(HeaderFooter)]
     #[route("/")]
-    Main {},
+    FrontPage {},
     #[route("/admin/products")]
-    AdminProduct {},
+    CategoryList {},
+    #[route("/produkter/:..segments")]
+    ProductPage { segments: Vec<String> },
+    #[route("/:..segments")]
+    NotFound { segments: Vec<String> }
+}
+
+#[component]
+fn HeaderFooter() -> Element {
+    use_context_provider(|| Signal::new(None::<sjf_api::category::GetChildrenRsp>) );
+    rsx! {
+        components::Header {}
+        div {
+            class: "content",
+            Outlet::<Route> {}
+        }
+        components::Footer {}
+    }
 }
 
 cfg_if::cfg_if! {
@@ -47,6 +65,8 @@ cfg_if::cfg_if! {
 use axum::extract::Path;
 #[cfg(feature="server")]
 use axum::response::IntoResponse;
+
+use crate::server::get_product;
 
 #[cfg(feature="server")]
 pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse
@@ -96,10 +116,7 @@ async fn launch_server() {
     let dioxus_router = axum::Router::new()
         .serve_dioxus_application(ServeConfigBuilder::new(), App);
     let custom_router= axum::Router::new()
-            .route("/images/:image_id}/:variant_id", get(handle_image_get))
-            .route("/test1/", get(async || format!("hello world")))
-            .route("/test/*key", get(async | Path(id) : Path<(String)> | format!("hello world {id}")));
-
+            .route("/images/:image_id}/:variant_id", get(handle_image_get));
 
     let router = axum::Router::new()
         .merge(custom_router)
@@ -118,24 +135,54 @@ fn App() -> Element {
 
 
 #[component]
-fn Main() -> Element {
+fn NotFound(segments : Vec<String>) -> Element {
     rsx! {
-        components::Header {}
-        div {
-            class: "content",
-            FrontPage {  }
+        h2 {
+            "Oops! Sidan hittades inte :/"
         }
-        components::Footer {}
     }
 }
+
 #[component]
-fn AdminProduct() -> Element {
-    rsx! {
-        components::Header {}
-        div {
-            class: "content",
-            components::CategoryList  {}
+fn ProductPage(segments: Vec<String> ) -> Element {
+
+    let error_msg = "Ooops här var det tomt, möjligen kan produkten plockats bort";
+    let id : Option<String> = segments.last().cloned();
+    let product = use_resource(  { let id = id.clone(); move || {to_owned![id];  async move {
+        
+        if  id.is_none() {
+            return Err(())
         }
-        components::Footer {}
+
+        match  id.unwrap().parse()
+        {
+            Ok(i) => get_product(i).await.map_err(|_| () ),
+            Err(_) => Err(())
+        }
+    
+    }}});
+    
+    if id.is_none()
+    {
+        rsx! {
+            div { "{error_msg}" }
+        }
     }
+    else {
+
+        match *product.read() {
+            None => rsx! {
+               div { "Laddar..." }
+            },
+            Some(Ok(ref p)) => rsx! {
+                components::Product {product: p.clone() }
+            },
+            Some(Err(e)) => rsx! 
+            {
+                div { "{error_msg}" }
+            }
+        }
+    }
+
 }
+
