@@ -3,21 +3,9 @@ use sjf_api::product::{Image, Preview};
 
 use crate::server;
 
-//#[component]
-//fn Heighlights() -> Element
-//{
-//
-//} 
-//
-//#[component]
-//fn categories() -> Element
-//{
-//
-//
-//} 
 
 #[component]
-fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element 
+pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element 
 {
 
     let mut loaded = use_signal(||false);
@@ -170,9 +158,13 @@ fn ProductCategories() -> Element
                 h2 { "Utforska"}
                 div {
                     for (_,c) in &cs.children {
-                        div {
-                            class: "category",
-                            "{c}"
+                        a {
+                            href: "/produkter/{c}/",
+                            div {
+                                class: "category",
+                                "{c}"
+                            }
+
                         }
                     }
                 }

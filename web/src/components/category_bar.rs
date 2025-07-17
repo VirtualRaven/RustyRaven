@@ -5,9 +5,24 @@ pub fn CategoryBar(path: ReadOnlySignal<Vec<String>> ) -> Element {
         div 
         {
             class: "category-bar",
-            for segment in path() 
+            for (i,segment) in path().iter().enumerate() 
             {
-                span { "{segment}" }
+                span { a {
+                    href: { 
+                        let mut path = path()
+                        .iter()
+                        .take(i+1)
+                        .fold(String::from(sjf_api::product::PRODUCTS_PATH), |mut a,s | {
+                            a.push('/');
+                            a.push_str(s);
+                            a
+                        });
+                        path.push('/');
+                        path
+
+                    },
+                    "{segment}"
+                } }
             }
 
         }

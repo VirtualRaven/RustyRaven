@@ -1,7 +1,7 @@
 use dioxus::{logger::tracing::info, prelude::*};
 use sjf_api::category::GetChildrenRsp;
 
-use crate::{components::{self, MenuState}, server};
+use crate::{components::{self, FrontPage, MenuState}, server};
 
 const MAIN_SCSS: Asset = asset!("/assets/styling/main.scss");
 const RESET_CSS: Asset = asset!("/assets/styling/reset.css");
@@ -28,7 +28,6 @@ pub fn DynamicMenu() -> Element
     });
 
 
-    info!("{:#?}", categories);
 
     let categories = categories.read();
 
@@ -38,7 +37,10 @@ pub fn DynamicMenu() -> Element
             {
                 li {
                     key: id,
-                    "{name}"
+                    a {
+                        href: "/produkter/{name}/",
+                        "{name}"
+                    }
                 }
             }
 
@@ -86,10 +88,13 @@ pub fn Header() -> Element {
                     div {},
                     div {}
                 }
-                img {
-                    class: "logo",
-                    src: HEADER_LOGO
-                },
+                a {
+                    href: "/",
+                    img {
+                        class: "logo",
+                        src: HEADER_LOGO
+                    },
+                }
                 components::Cart {}
             },
             ul {  

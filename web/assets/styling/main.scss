@@ -3,6 +3,10 @@
 body {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
+a {
+    text-decoration: none;
+    color:inherit;
+}
 
 .content {
     background-color: defines.$inputcolor;
@@ -335,7 +339,7 @@ $layout-breakpoint-split: 1200px;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        > div {
+        > a {
             text-align: center;
             vertical-align: center;
             font-size: x-large;

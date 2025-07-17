@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::category;
 
+pub const PRODUCTS_PATH: &str = "/produkter";
+pub const ARTICLE_PREFIX: &str = "artikel-";
+
 
 #[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
 pub struct ImageVariant 
@@ -57,11 +60,11 @@ impl Preview {
     pub fn product_url(&self) -> String 
     {
         assert!(!self.category_name.is_empty());
-        let cat = self.category_name.iter().map(|x| urlencoding::encode(x) ).fold(String::from("/produkter"),|acc,s| {
+        let cat = self.category_name.iter().map(|x| urlencoding::encode(x) ).fold(String::from(PRODUCTS_PATH),|acc,s| {
             acc + "/" + &s
         } );
 
-        cat + "/" + &self.id.to_string()
+        cat + "/" + ARTICLE_PREFIX + &self.id.to_string()
 
     }
 }

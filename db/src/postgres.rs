@@ -26,10 +26,24 @@ pub async fn init(args: &crate::DbSettings) -> Result<(),sqlx::Error>
 
     POOL.set(pool).unwrap();
 
+    {
+        let mut tx = POOL.get().unwrap().begin().await?;
+        query_file!("sql/table_definitions/0-product_categories.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/1-product_categories_hierarchy.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/2-images.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/3-image_variants.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/4-products.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/5-product_images.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/6-product_association_index.sql").execute(&mut *tx).await?;
+        tx.commit().await?;
+    }
+
     image::update_image_view(POOL.get().unwrap(), true).await?;
     crate::category::update_paths_view(POOL.get().unwrap(), true).await?;
     Ok(())
 }
+
+
 
 
 pub mod image {

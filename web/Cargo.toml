@@ -19,10 +19,11 @@ serde = { workspace=true }
 futures = {version="0.3.31", optional=true}
 rand = "0.9.1"
 getrandom = { version = "0.3.3", features = ["wasm_js"] }
+urlencoding = {workspace=true, optional=true}
 
 [features]
 default = ["web"]
 # The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
 web = ["dioxus/web"]
-server = ["dioxus/server" ,  "dep:sjf_db","dep:futures", "dep:sjf_image", "dep:pretty_env_logger", "dep:tokio","dep:axum"]
+server = ["dioxus/server" , "dep:urlencoding",  "dep:sjf_db","dep:futures", "dep:sjf_image", "dep:pretty_env_logger", "dep:tokio","dep:axum"]
 

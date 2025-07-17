@@ -276,6 +276,7 @@ use sjf_api::product::{GetPreviewsRequest, GetPreviewsResp};
 #[server(endpoint="get_previews",input=dioxus::prelude::server_fn::codec::GetUrl)]
 pub async fn get_previews( p: Option<u32>, r: bool, limit: u32) -> Result<GetPreviewsResp,ServerFnError>
 {
+    warn!("get_previews: {:#?}",p);
     let r = GetPreviewsRequest {
         recursive: r,
         category: p,
@@ -292,4 +293,57 @@ pub async fn get_product( p: u32 ) -> Result<GetProductResponse,ServerFnError>
         product_id: p
     };
     error_logger( db::product::get_product(r).await)
+}
+
+
+#[server(endpoint="get_category_and_product",input=dioxus::prelude::server_fn::codec::GetUrl)]
+pub async fn get_category_and_product(path: String ) -> Result<(u32, Option<sjf_api::product::Product>),ServerFnError>  
+{ 
+    use dioxus::prelude::ServerFnError::ServerError;
+
+    let serverError = |a: &'static str| -> ServerFnError { dioxus::prelude::ServerFnError::ServerError(a.into()) };
+
+
+
+    let get_paths = db::category::get_paths();
+    let (path,article) =  match path.rfind('/') 
+    {
+        Some(i) => {
+           let (first,last) = path.split_at(i);
+
+           let prefix = String::from('/') + sjf_api::product::ARTICLE_PREFIX;
+
+            match last.strip_prefix(&prefix)
+            {
+                Some(last ) => (first,Some(last)),
+                None => (path.as_str(),None)
+            }
+
+
+        } ,
+        None => (path.as_str(), None) 
+    };
+
+    let  path = path.strip_prefix('/').unwrap_or(path);
+
+    let path = urlencoding::decode(path).map_err(|_| serverError("Url decoding failed") )?;
+
+    let res = get_paths.await.map_err(|_| serverError("Database failure"))?;
+
+    
+    let category_id = *res.get(&*path).ok_or(serverError("Category not found"))?;
+
+    match article 
+    {
+        Some(a)=> 
+        {
+            let a_id: u32 = a.parse().map_err(|_| serverError("Invalid product id"))?;
+            let product = get_product(a_id).await;
+
+            product.map(|p| (category_id,Some(p)) ).map_err(|e| e.into() )
+
+        }
+        None =>  Ok((category_id,None))
+    }
+        
 }

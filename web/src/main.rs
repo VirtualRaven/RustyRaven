@@ -11,6 +11,17 @@ use sjf_image as image;
 use sjf_db as db;
 use dioxus::logger::tracing::info;
 
+cfg_if::cfg_if! {
+    if  #[cfg(feature="server")]
+    {
+        use axum::extract::Path;
+        use axum::response::IntoResponse;
+        use axum::extract::Request;
+        use axum::http::{StatusCode, Uri};
+        use axum::middleware::Next;
+        use axum::response::Response;
+    }
+}
 //const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 
@@ -24,6 +35,8 @@ pub enum Route {
     CategoryList {},
     #[route("/produkter/:..segments")]
     ProductPage { segments: Vec<String> },
+    //#[route("/produkter/{category_id}")]
+    //FrontPage {},
     #[route("/:..segments")]
     NotFound { segments: Vec<String> }
 }
@@ -61,12 +74,9 @@ cfg_if::cfg_if! {
     }
 }
 
-#[cfg(feature="server")]
-use axum::extract::Path;
-#[cfg(feature="server")]
-use axum::response::IntoResponse;
 
-use crate::server::get_product;
+
+use crate::server::{get_category_and_product, get_product};
 
 #[cfg(feature="server")]
 pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse
@@ -92,6 +102,7 @@ pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse
         }
     }
 }
+
 
 
 
@@ -146,41 +157,26 @@ fn NotFound(segments : Vec<String>) -> Element {
 #[component]
 fn ProductPage(segments: Vec<String> ) -> Element {
 
+
     let error_msg = "Ooops här var det tomt, möjligen kan produkten plockats bort";
-    let id : Option<String> = segments.last().cloned();
-    let product = use_resource(  { let id = id.clone(); move || {to_owned![id];  async move {
-        
-        if  id.is_none() {
-            return Err(())
-        }
-
-        match  id.unwrap().parse()
-        {
-            Ok(i) => get_product(i).await.map_err(|_| () ),
-            Err(_) => Err(())
-        }
-    
+    let product = use_resource( {to_owned![segments];    move || {to_owned![segments]; async move {
+        info!("Getting product data!");
+        get_category_and_product(segments.join("/")).await
     }}});
-    
-    if id.is_none()
-    {
-        rsx! {
-            div { "{error_msg}" }
-        }
-    }
-    else {
 
-        match *product.read() {
-            None => rsx! {
-               div { "Laddar..." }
-            },
-            Some(Ok(ref p)) => rsx! {
-                components::Product {product: p.clone() }
-            },
-            Some(Err(e)) => rsx! 
-            {
-                div { "{error_msg}" }
-            }
+    match *product.read_unchecked() {
+        None => rsx! {
+           div { "Laddar produkt..." }
+        },
+        Some(Ok((i,Some(ref p)))) => rsx! {
+            components::Product {product: p.clone() }
+        },
+        Some(Ok((i,None))) => rsx! {
+            components::Category { category_path: segments, id: i  }
+        },
+        Some(Err(ref e)) => rsx! 
+        {
+            div { "{error_msg}" }
         }
     }
 

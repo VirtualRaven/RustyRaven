@@ -1,4 +1,6 @@
-use log::error;
+use std::collections::HashMap;
+
+use log::{error, info};
 use sjf_api::category::{CreateReq,CreateRsp, GetChildrenRsp};
 use sqlx::{query, query_as,query_file, Executor, Postgres};
 use crate::postgres::POOL;
@@ -76,6 +78,8 @@ where E: Executor<'c, Database = Postgres>,
         descendant: i32
     };
 
+    info!("Banan");
+
     match (root,recursive)
     {
         (None,true) => 
@@ -87,11 +91,11 @@ where E: Executor<'c, Database = Postgres>,
             .fetch_all(e)
             .await,
         (Some(parent),false) => 
-            query_as!(T,"WITH D AS (SELECT depth from product_categories_hierarchy WHERE (descendant=ancestor AND ancestor=$1)) SELECT descendant FROM product_categories_hierarchy WHERE (ancestor=$1 AND depth = (SELECT depth from D)+1 ) ",parent as i32)
+            query_as!(T,"WITH D AS (SELECT depth from product_categories_hierarchy WHERE (descendant=ancestor AND ancestor=$1)) SELECT descendant FROM product_categories_hierarchy WHERE (ancestor=$1 AND depth = (SELECT depth from D) ) ",parent as i32)
             .fetch_all(e)
             .await,
         (Some(parent),true) => 
-            query_as!(T,"WITH D AS (SELECT depth from product_categories_hierarchy WHERE (descendant=ancestor AND ancestor=$1)) SELECT descendant FROM product_categories_hierarchy WHERE (ancestor=$1 AND depth > (SELECT depth from D) ) ",parent as i32)
+            query_as!(T,"WITH D AS (SELECT depth from product_categories_hierarchy WHERE (descendant=ancestor AND ancestor=$1)) SELECT descendant FROM product_categories_hierarchy WHERE (ancestor=$1 AND depth >= (SELECT depth from D) ) ",parent as i32)
             .fetch_all(e)
             .await
     }
@@ -133,4 +137,13 @@ pub(crate) fn update_paths_view_later()
         }
 
     });
+}
+
+pub async fn get_paths() -> Result<HashMap<String,u32> , sqlx::Error >
+{
+    let res = query!("SELECT id, array_to_string(names,'/') as path FROM product_paths")
+    .fetch_all(POOL.get().unwrap())
+    .await?;
+
+    Ok(res.into_iter().map(|r| (r.path.unwrap(),r.id.unwrap() as u32)  ).collect())
 }

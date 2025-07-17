@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use chrono::{DateTime, Utc};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sjf_api::{category, product::{GetPreviewsRequest, GetPreviewsResp, Preview,Product as ApiProduct,GetProductRequest,GetProductResponse}};
 use sqlx::{database, postgres::{PgHasArrayType, PgPoolOptions},query, query_file, query_file_as, Pool, Postgres};
@@ -153,6 +154,7 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp,sql
 {   
     let categories = crate::category::get_child_categories(req.category, req.recursive, POOL.get().unwrap()).await?;
     
+    warn!("get_previews: {:#?}",categories);
 
     struct  T {
         id: Option<i32>,
@@ -207,6 +209,7 @@ pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sq
         name: Option<String>,
         images: Option<Vec<ImageInfo>>,
         names: Option<Vec<String>>,
+        category: Option<i32>,
     };
 
     let t = query_file_as!(T,"sql/get_product.sql", req.product_id as i32 )
