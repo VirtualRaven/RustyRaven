@@ -1,19 +1,13 @@
 use std::collections::HashSet;
 
 use chrono::{DateTime, Utc};
-use log::{info, warn};
+use tracing::{info, warn};
 use serde::{Deserialize, Serialize};
 use sjf_api::{category, product::{GetPreviewsRequest, GetPreviewsResp, Preview,Product as ApiProduct,GetProductRequest,GetProductResponse}};
 use sqlx::{database, postgres::{PgHasArrayType, PgPoolOptions},query, query_file, query_file_as, Pool, Postgres};
 use crate::postgres::POOL;
 
 
-#[derive(Serialize, Deserialize, Debug, sqlx::Type)]
-#[sqlx(type_name = "product_tag", rename_all = "lowercase")] 
-pub enum ProductTag {
-    Clothing,
-    Lamp
-}
 
 
 
@@ -27,7 +21,6 @@ pub struct Product {
     pub quantity: Option<i32>,
     pub created: DateTime<Utc>,
     pub updated: DateTime<Utc>,
-    pub product_tag: Vec<ProductTag>,
     pub tax_rate: u32,
     pub images: Vec<u32>,
     pub category: u32,
@@ -45,7 +38,6 @@ pub async fn get_products(category: u32) -> Result<Vec<Product>,sqlx::Error>
         pub quantity: Option<i32>,
         pub created: DateTime<Utc>,
         pub updated: DateTime<Utc>,
-        pub product_tag: Vec<ProductTag>,
         pub tax_rate: i32,
         pub image_ids: Option<Vec<i32>>,
         pub category: i32
@@ -53,7 +45,7 @@ pub async fn get_products(category: u32) -> Result<Vec<Product>,sqlx::Error>
 
     impl From<ProductT> for Product {
         fn from(p: ProductT) -> Self {
-            Product { id: p.id, name: p.name, price: p.price, description: p.description, quantity: p.quantity, created: p.created, updated: p.updated, product_tag: p.product_tag, tax_rate: p.tax_rate as u32, category: p.category as u32,  images: p.image_ids.unwrap_or_default().into_iter().map(|x| x as u32).collect() }
+            Product { id: p.id, name: p.name, price: p.price, description: p.description, quantity: p.quantity, created: p.created, updated: p.updated, tax_rate: p.tax_rate as u32, category: p.category as u32,  images: p.image_ids.unwrap_or_default().into_iter().map(|x| x as u32).collect() }
         }
     }
    
@@ -78,7 +70,6 @@ pub async fn create_product(product: Product ) -> Result<i32, sqlx::Error>
     product.price,
     product.description,
     product.quantity,
-    product.product_tag as _,
     product.category as i32,
     product.tax_rate as i32,
     )
@@ -109,7 +100,6 @@ pub async fn update_product(product: Product ) -> Result<(), sqlx::Error>
     product.price,
     product.description,
     product.quantity,
-    product.product_tag as _,
     product.id)
     .execute (&mut *tx)
     .await?;

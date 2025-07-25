@@ -1,106 +1,104 @@
 use std::env;
 use std::time::Duration;
-use s3::{Bucket, creds::Credentials,   region::Region, error::S3Error, BucketConfiguration  };
 use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
 
 use crate::ImageId;
+use thiserror::Error;
+
+use aws_sdk_s3::{config::http::HttpResponse, error::SdkError, operation::{create_bucket::CreateBucketError, get_object::GetObjectError, list_buckets::ListBucketsError, put_object::PutObjectError}, primitives::{ByteStream, ByteStreamError}, types::{CreateBucketConfiguration, LocationInfo}, waiters::bucket_exists, Client};
 
 
 
-static BUCKET : OnceCell<Box<Bucket>> = OnceCell::new();
+const BUCKET_NAME: &str  = "sjf-images-bucket";
+static CLIENT : OnceCell<Box<Client>> = OnceCell::new();
 
 
-fn bucket() -> &'static Box<Bucket>
+#[derive(Error, Debug)]
+pub enum ObjectStorageError 
 {
-    BUCKET.get().expect("Bucket should have been intialized")
+    #[error("Failed to list buckets: {0}")]
+    ListBucketError(#[from] SdkError<ListBucketsError, HttpResponse  > ),
+    #[error("Failed Create bucket: {0}")]
+    CreateBucketError(#[from] SdkError<CreateBucketError, HttpResponse  > ),
+    #[error("Failed object from bucket: {0}")]
+    GetObjectError(#[from] SdkError<GetObjectError, HttpResponse  > ),
+    #[error("Failed object from bucket: {0}")]
+    PutObjectError(#[from] SdkError<PutObjectError, HttpResponse  > ),
+    #[error("ByteStreamError: {0}")]
+    ByteStreamError(#[from] ByteStreamError ),
+}
+
+fn client() -> &'static Box<Client>
+{
+
+    CLIENT.get().expect("Client should have been intialized")
 }
 
 
-pub async fn init_bucket() -> Result<(),S3Error>
+
+pub async fn init_bucket() -> Result<(),ObjectStorageError>
 {
-    let bucket_name  = "sjf-images-bucket";
-    let region : Region = {
-        Region::Custom {
-            region: "eu-central-1".to_owned(),
-            endpoint: "http://localhost:9000".to_owned(),
+        use aws_sdk_s3::config::Credentials;
+        use aws_sdk_s3::config::Region;
+        let key_id = std::env::var("S3_ACCESS_KEY_ID").expect("Environment variable S3_ACCESS_KEY_ID is required");
+        let secret_key = std::env::var("S3_SECRET_ACCESS_KEY").expect("Environment variable S#_SECRET_ACCESS_KEY is required");
+        let cred = Credentials::new(&key_id, &secret_key, None, None, "loaded-from-custom-env");
+        let endpoint = std::env::var("OBJECT_STORAGE_URI").expect("Environment variable OBJECT_STORAGE_URI required").to_owned();
+        let s3_config = aws_sdk_s3::config::Builder::new()
+            .endpoint_url(endpoint)
+            .credentials_provider(cred)
+            .region(Region::new("eu-central-1"))
+            .force_path_style(true) // apply bucketname as path param instead of pre-domain
+            .behavior_version_latest()
+            .build();
+
+        let client = aws_sdk_s3::Client::from_conf(s3_config);
+
+
+        let resp = client.list_buckets().send().await?;
+        let bucket_exists = resp.buckets().iter().find(|b|  {b.name().unwrap_or_default() == BUCKET_NAME}).is_some();
+
+        if !bucket_exists 
+        {
+            client
+            .create_bucket()
+            .set_bucket(Some(BUCKET_NAME.into()))
+            .send()
+            .await?;
         }
-    };
 
-    let credentials: Credentials = {
-        Credentials::default()?
-    };
+        CLIENT.set(client.into()).unwrap();
 
-    let mut bucket = Bucket::new(&bucket_name, region.clone(), credentials.clone())?.with_path_style();
-    if !bucket.exists().await? {
-        bucket = Bucket::create_with_path_style(
-            &bucket_name,
-            region,
-            credentials,
-            BucketConfiguration::default(),
-        )
-        .await?
-        .bucket
-    }
-
-    BUCKET.set(bucket).unwrap();
-
-    Ok(())
-
+        Ok(())
+    
 }
+
 
 fn id_filename(id: ImageId) ->String
 {
     format!("{}-{}.jpeg",id.image_id,id.variant_id)
 }
 
-pub async fn get_image(id: ImageId) -> Result<Vec<u8>,S3Error>
+pub async fn get_image(id: ImageId) -> Result<Vec<u8>,ObjectStorageError>
 {
-    let rsp = bucket().get_object(id_filename(id) ).await?;
-    assert_eq!(rsp.status_code(),200);
-    Ok(rsp.to_vec())
+    let rsp = client().get_object().bucket(BUCKET_NAME).set_key(Some(id_filename(id))).send().await?;
+    Ok(rsp.body.collect().await?.to_vec())
 }
 
-pub async fn put_image(id: ImageId, data: &Vec<u8> ) -> Result<(),S3Error>
+pub async fn put_image(id: ImageId, data: Vec<u8> ) -> Result<(),ObjectStorageError>
 {
-    let rsp = bucket().put_object(id_filename(id),&data).await?;
-    assert_eq!(rsp.status_code(), 200);
+
+    client()
+    .put_object()
+    .set_bucket(Some(BUCKET_NAME.into()))
+    .set_key(Some(id_filename(id)))
+    .set_content_type(Some("image/jpeg".into()))
+    .set_body(Some(
+        data.into()
+    ))
+    .send()
+    .await?;
     Ok(())
 
 }
-
-
-
-//async fn main() -> Result<(), S3Error> {
-//
-//    let credentials = Credentials::default()?;
-//
-//
-//
-//
-//    let s3_path = "test.file";
-//    let test = b"I'm going to S3!";
-//
-//    let response_data = bucket.put_object(s3_path, test).await?;
-//    assert_eq!(response_data.status_code(), 200);
-//
-//    let response_data = bucket.get_object(s3_path).await?;
-//    assert_eq!(response_data.status_code(), 200);
-//    assert_eq!(test, response_data.as_slice());
-//
-//    let response_data = bucket
-//        .get_object_range(s3_path, 0, Some(1000))
-//        .await
-//        .unwrap();
-//    assert_eq!(response_data.status_code(), 206);
-//    let (head_object_result, code) = bucket.head_object(s3_path).await?;
-//    assert_eq!(code, 200);
-//    assert_eq!(
-//        head_object_result.content_type.unwrap_or_default(),
-//        "application/octet-stream".to_owned()
-//    );
-//
-//    let response_data = bucket.delete_object(s3_path).await?;
-//    assert_eq!(response_data.status_code(), 204);
-//    Ok(())
-//}

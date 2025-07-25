@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use image::ImageError;
-use log::warn;
+use tracing::warn;
 use sjf_db as db;
 
 mod thumbnails;

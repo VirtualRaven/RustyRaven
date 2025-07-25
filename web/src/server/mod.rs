@@ -18,12 +18,6 @@ for<'de2> T: Deserialize<'de2>
     pub data: T 
 }
 
-
-#[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
-pub enum ProductTag {
-    Clothing,
-    Lamp
-}
 #[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
 pub struct Product {
 
@@ -32,7 +26,6 @@ pub struct Product {
     pub price: u16,
     pub description: String,
     pub quantity: Option<u16>,
-    pub product_tag: Option<Vec<ProductTag>>,
     pub images: Option<BTreeSet<u32>>,
     pub tax_rate: u32,
     pub category: u32,
@@ -42,7 +35,7 @@ pub struct Product {
 impl  Product  {
     pub fn new(category: u32) -> Self 
     {
-        Product { id: None, name: String::from(""), price: 0, description: String::from(""), quantity: None, product_tag: None, images: None, tax_rate: 25, category }
+        Product { id: None, name: String::from(""), price: 0, description: String::from(""), quantity: None, images: None, tax_rate: 25, category }
 
     }
 }
@@ -61,30 +54,12 @@ fn error_logger<T>(t : Result<T,db::Error>  ) -> Result<T,ServerFnError>
     }
 }
 
-#[cfg(feature="server")]
-impl From<db::ProductTag> for ProductTag 
-{
-    fn from(tag: db::ProductTag) -> Self
-    {
-        match tag {
-            db::ProductTag::Lamp => ProductTag::Lamp,
-            db::ProductTag::Clothing => ProductTag::Clothing,
-        }
-    }
-
-}
 
 #[cfg(feature= "server")]
 impl From<db::Product> for Product 
 {
     fn from(product: db::Product) -> Self 
     {
-        let tags = {
-            if product.product_tag.is_empty() { None} 
-            else {
-                Some(product.product_tag.into_iter().map(|x| x.into()).collect())
-            }
-        };
         let images = {
             Some(product.images.into_iter().collect())
         };
@@ -94,7 +69,6 @@ impl From<db::Product> for Product
             price: product.price as u16,
             description: product.description,
             quantity: product.quantity.map(|x| x as u16),
-            product_tag: tags,
             images: images,
             tax_rate: product.tax_rate,
             category: product.category 
@@ -102,18 +76,6 @@ impl From<db::Product> for Product
     }
 }
 
-#[cfg(feature="server")]
-impl From<ProductTag> for db::ProductTag 
-{
-    fn from(tag: ProductTag) -> Self
-    {
-        match tag {
-            ProductTag::Lamp => db::ProductTag::Lamp,
-            ProductTag::Clothing => db::ProductTag::Clothing,
-        }
-    }
-
-}
 
 #[cfg(feature="server")]
 impl From<Product> for db::Product 
@@ -128,11 +90,6 @@ impl From<Product> for db::Product
             updated: Default::default(),
             description: product.description,
             quantity: product.quantity.map(|x| x as i32),
-            product_tag: {
-                product.product_tag.unwrap_or(vec![]).into_iter().map(|x|
-                    x.into()
-                ).collect()
-            },
             images: product.images.unwrap_or_default().into_iter().collect(),
             tax_rate: product.tax_rate,
             category: product.category,

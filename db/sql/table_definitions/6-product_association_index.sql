@@ -1,1 +1,1 @@
-CREATE UNIQUE INDEX unique_image_product_association ON public.product_images USING btree (image_id, product_id);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_image_product_association ON public.product_images USING btree (image_id, product_id);

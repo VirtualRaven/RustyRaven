@@ -23,17 +23,15 @@ pub fn ProductRow(props: ProductRowProps) -> Element {
 
     rsx! {
         tr {
-                td { "{id}"},
-                td { "{product.name}"},
-                td { "{price}kr"},
-                td { "{quantity}"}
-                th {
+                td { 
                     a {
                         onclick: move |evt| props.onclick.call(evt),
-                        "Ändra"
+                        "{product.name}"
                     }
-                }
 
+                },
+                td { "{price}kr"},
+                td { "{quantity}"}
         }
     }
 }
@@ -51,11 +49,9 @@ pub fn ProductTable(props: ProductTableProps) -> Element
     rsx! {
         table {
             tr {
-                th {"Artikel nr"},
                 th {"Namn"},
                 th {"Pris"},
                 th {"Kvantitet"}
-                th {""}
             }
             for product in products.iter() {
 

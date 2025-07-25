@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS products(
     quantity integer,
     created timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tags product_tag[] NOT NULL,
     tax_rate integer NOT NULL,
     category integer NOT NULL,
     PRIMARY KEY(id),

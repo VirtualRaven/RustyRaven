@@ -1,5 +1,5 @@
 use std::{collections::{BTreeMap, VecDeque}, sync::Arc};
-use log::info;
+use tracing::info;
 use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use chrono::{naive, Local, NaiveDateTime, Utc};

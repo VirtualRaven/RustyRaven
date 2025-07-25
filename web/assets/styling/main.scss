@@ -16,6 +16,13 @@ a {
     padding:2rem;
 }
 
+
+@media (max-width: 600px ) 
+{
+    .content {padding:0.5rem;}
+    footer {padding: 0.5rem !important; }
+}
+
 header {
     position: sticky;
     top:0;
@@ -99,6 +106,7 @@ header {
     }
     img.logo {
         height: 40px;
+        max-width: 40vw;
         padding:0;
         margin-left:2rem;
         margin-right:1rem;
@@ -137,7 +145,7 @@ footer {
         color: #4F5D75;
     }
     > img {
-        width: 250px;
+        width: calc( min( 250px, 30vw) );
         margin-left: auto;
     }
 }

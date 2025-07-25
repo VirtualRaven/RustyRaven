@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use log::{error, info};
+use tracing::{error, info};
 use sjf_api::category::{CreateReq,CreateRsp, GetChildrenRsp};
 use sqlx::{query, query_as,query_file, Executor, Postgres};
 use crate::postgres::POOL;

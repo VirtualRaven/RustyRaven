@@ -1,5 +1,5 @@
 use image::{DynamicImage, ImageDecoder, ImageEncoder, ImageError, ImageReader };
-use log::{info, warn};
+use tracing::{info, warn};
 use std::{collections::VecDeque, io::Write };
 use sjf_db as db;
 
@@ -122,7 +122,7 @@ pub async fn upload_image(bytes: Vec<u8>) -> Result<ImageId,crate::Error>
         let mut encoder = JpegEncoder::new_with_quality(&mut w, 80);
         if let Some(ref profile) = image.icc_profile
         {
-            encoder.set_icc_profile(profile.clone());
+            let _ = encoder.set_icc_profile(profile.clone());
         }
         
         thumbnail.write_with_encoder(encoder)?;
@@ -166,7 +166,7 @@ pub async fn upload_image(bytes: Vec<u8>) -> Result<ImageId,crate::Error>
 
 
     let id = { 
-        let id = image_ids.last().unwrap().clone();
+        let id = image_ids.last().unwrap();
         ImageId {
             image_id: id.image_id as u32,
             variant_id: id.variant_id as u32
@@ -190,7 +190,7 @@ pub async fn upload_image(bytes: Vec<u8>) -> Result<ImageId,crate::Error>
                 .into_iter()
                 .zip(images.into_iter());
                 for (id,image) in iter {
-                    match crate::object_storage::put_image((id.image_id as u32 ,id.variant_id as u32).into(), &image.data).await
+                    match crate::object_storage::put_image((id.image_id as u32 ,id.variant_id as u32).into(), image.data).await
                     {
                         Ok(()) => (),
                         Err(e) => warn!("Image put error {:#?}",e)

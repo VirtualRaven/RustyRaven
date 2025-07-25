@@ -5,6 +5,5 @@ UPDATE products
         price=$2,
         description=$3,
         quantity=$4, 
-        updated=NOW(),  
-        tags=$5::product_tag[] 
-    where id = $6;
+        updated=NOW()
+    where id = $5;

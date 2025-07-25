@@ -8,26 +8,33 @@ use once_cell::sync::OnceCell;
 
 pub (crate) static POOL: OnceCell<Pool<Postgres>> = OnceCell::new();
 
-pub async fn init(args: &crate::DbSettings) -> Result<(),sqlx::Error>
+pub async fn init() -> Result<(),sqlx::Error>
 {
 
-    let url = {
-        let user = &args.db_user;
-        let database = &args.db_name;
-        let address = &args.db_address;
-        let password = &args.db_password;
-
+    let url = std::env::var("DATABASE_URL").unwrap_or_else( |_| {
+        let user = std::env::var("POSTGRES_USER")
+        .expect("POSTGRES_USER environment variable has to be set. ");
+        let address =  std::env::var("POSTGRES_ADDRESS")
+        .expect("POSTGRES_ADDRESS environment variable has to be set. ");
+        let database =  std::env::var("POSTGRES_DB_NAME")
+        .expect("POSTGRES_DB_NAME environment variable has to be set. ");
+        let password =  std::env::var("POSTGRES_PASSWORD")
+        .expect("POSTGRES_PASSWORD environment variable has to be set. ");
         format!("postgres://{user}:{password}@{address}/{database}")
-    };
+    });
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&url).await?;
 
-    POOL.set(pool).unwrap();
+    {
+        let _ = query_file!("sql/type_definitions/0-image_variant.sql").execute(&pool).await;
+        let _ = query_file!("sql/type_definitions/1-image_info_type.sql").execute(&pool).await;
+    }
+
 
     {
-        let mut tx = POOL.get().unwrap().begin().await?;
+        let mut tx = pool.begin().await?;
         query_file!("sql/table_definitions/0-product_categories.sql").execute(&mut *tx).await?;
         query_file!("sql/table_definitions/1-product_categories_hierarchy.sql").execute(&mut *tx).await?;
         query_file!("sql/table_definitions/2-images.sql").execute(&mut *tx).await?;
@@ -38,8 +45,9 @@ pub async fn init(args: &crate::DbSettings) -> Result<(),sqlx::Error>
         tx.commit().await?;
     }
 
-    image::update_image_view(POOL.get().unwrap(), true).await?;
-    crate::category::update_paths_view(POOL.get().unwrap(), true).await?;
+    image::update_image_view(&pool, true).await?;
+    crate::category::update_paths_view(&pool, true).await?;
+    POOL.set(pool).unwrap();
     Ok(())
 }
 
@@ -50,7 +58,7 @@ pub mod image {
 
     use std::collections::BTreeMap;
 
-    use log::error;
+    use tracing::error;
     use sqlx::{query, query_as, Executor};
 
     use super::*;

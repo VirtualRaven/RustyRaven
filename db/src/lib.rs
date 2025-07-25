@@ -17,20 +17,9 @@ pub struct DbSettings {
 pub async fn init() -> bool
 {
 
-    let settings = DbSettings {
-
-        db_user: { std::env::var("POSTGRES_USER")
-            .expect("POSTGRES_USER environment variable has to be set. ")},
-        db_address: { std::env::var("POSTGRES_ADDRESS")
-            .expect("POSTGRES_ADDRESS environment variable has to be set. ")},
-        db_name: { std::env::var("POSTGRES_DB_NAME")
-            .expect("POSTGRES_DB_NAME environment variable has to be set. ")},
-        db_password: {std::env::var("POSTGRES_PASSWORD")
-            .expect("POSTGRES_PASSWORD environment variable has to be set. ")}
-    };
-    if let Err(e) = postgres::init(&settings).await
+    if let Err(e) = postgres::init().await
     {
-        log::error!("Failed to initialize DB connection {:#?}",e);
+        tracing::error!("Failed to initialize DB connection {:#?}",e);
         return false;
     }
     return true

@@ -9,7 +9,7 @@ mod server;
 use sjf_image as image;
 #[cfg(feature="server")]
 use sjf_db as db;
-use dioxus::logger::tracing::info;
+use dioxus::logger::tracing::{info,error};
 
 cfg_if::cfg_if! {
     if  #[cfg(feature="server")]
@@ -110,23 +110,47 @@ pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse
 #[cfg(feature="server")]
 async fn launch_server() {
     // Connect to dioxus' logging infrastructure
-    dioxus::logger::initialize_default();
+    //dioxus::logger::initialize_default();
+    dioxus::logger::init(dioxus::logger::tracing::Level::DEBUG).expect("failed to init logger");
     
     info!("Initializing db...");
-    db::init().await;
+    if  !db::init().await  
+    {
+       std::process::exit(1);
+    }
     
     info!("Initializing object storage...");
-    image::init().await.unwrap();
+    let res = image::init().await;
+    if let Err(e) = res 
+    {
+        use std::error::Error;
+
+       error!("Object storage intialization failed: \n{:#?}",e);
+        let mut source = e.source();
+        while let Some(s) = source  {
+            info!("Source {:#?}", s);
+            source = s.source();
+        }
+
+
+       error!("{:#?}",e.source());
+       std::process::exit(2);
+
+    }
 
     info!("Initializing dioxus...");
     // Connect to the IP and PORT env vars passed by the Dioxus CLI (or your dockerfile)
     let socket_addr =  dioxus::cli_config::fullstack_address_or_localhost();
+
+    info!("Hosting at {}", socket_addr);
+
     use axum::routing::get;
     use dioxus::fullstack::prelude::DioxusRouterExt;
 
     let dioxus_router = axum::Router::new()
         .serve_dioxus_application(ServeConfigBuilder::new(), App);
     let custom_router= axum::Router::new()
+            .route("/kubernetes/probes/liveness", get(|| async { StatusCode::NO_CONTENT }   )  )
             .route("/images/:image_id}/:variant_id", get(handle_image_get));
 
     let router = axum::Router::new()

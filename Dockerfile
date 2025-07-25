@@ -10,5 +10,11 @@ COPY image/ builddir/image/
 COPY .cargo/ builddir/.cargo/
 COPY .sqlx/ builddir/.sqlx/
 COPY web/ builddir/web/
+COPY 3pp/ builddir/3pp/
 RUN ls builddir && cd builddir/web && \ 
-    dx bundle --release --fullstack --out-dir ../../outputdir
+    dx bundle  --fullstack --out-dir ../../outputdir --debug-symbols --server-profile server-dev
+
+
+FROM alpine:3.22 
+COPY --from=builder outputdir/ application/
+CMD [ "application/server"]
