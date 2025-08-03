@@ -37,8 +37,8 @@ pub fn DynamicMenu() -> Element
             {
                 li {
                     key: id,
-                    a {
-                        href: "/produkter/{name}/",
+                    Link {
+                        to: crate::Route::ProductPage { segments: vec![name.clone()] },
                         "{name}"
                     }
                 }
@@ -88,8 +88,8 @@ pub fn Header() -> Element {
                     div {},
                     div {}
                 }
-                a {
-                    href: "/",
+                Link {
+                    to: crate::Route::FrontPage {},
                     img {
                         class: "logo",
                         src: HEADER_LOGO

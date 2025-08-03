@@ -8,20 +8,11 @@ pub fn CategoryBar(path: ReadOnlySignal<Vec<String>> ) -> Element {
             for (i,segment) in path().iter().enumerate() 
             {
                 span { a {
-                    href: { 
-                        let mut path = path()
-                        .iter()
-                        .take(i+1)
-                        .fold(String::from(sjf_api::product::PRODUCTS_PATH), |mut a,s | {
-                            a.push('/');
-                            a.push_str(s);
-                            a
-                        });
-                        path.push('/');
-                        path
 
-                    },
-                    "{segment}"
+                    Link {
+                        to: crate::Route::ProductPage { segments: path().clone().into_iter().take(i+1).collect() },
+                        "{segment}"
+                    }
                 } }
             }
 

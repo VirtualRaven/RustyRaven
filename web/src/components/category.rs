@@ -49,8 +49,15 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
                                         div {
                                             for child in &c.children 
                                             {
-                                                a {
-                                                    href:"{child.1.clone()}/",
+                                                Link {
+                                                    to: crate::Route::ProductPage { segments:
+                                                        {
+                                                            let mut path: Vec<String> = category_path();
+                                                            path.push(child.1.clone());
+                                                            path
+
+                                                        } 
+                                                    },
                                                     div {
                                                         {child.1.clone()}
                                                     }

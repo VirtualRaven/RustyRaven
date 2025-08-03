@@ -26,8 +26,8 @@ pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element
     
 
         rsx!(
-            a {
-                href: previewr.product_url(),
+            Link {
+                to: crate::Route::ProductPage { segments: previewr.product_path() } ,
                 class: "product_preview",
                 div {
                     div {
@@ -100,9 +100,9 @@ fn Latest() -> Element
                 }
             }
 
-            a {
+            Link {
                 class: "product-highlight",
-                href: highlight.product_url(),
+                to: crate::Route::ProductPage { segments: highlight.product_path() },
                 div {
                         img {
                             srcset: "{highlighted_image.srcset().unwrap() }"
@@ -157,8 +157,8 @@ fn ProductCategories() -> Element
                 h2 { "Utforska"}
                 div {
                     for (_,c) in &cs.children {
-                        a {
-                            href: "/produkter/{c}/",
+                        Link {
+                            to: crate::Route::ProductPage { segments:  vec![c.clone()] } ,
                             div {
                                 class: "category",
                                 "{c}"

@@ -57,6 +57,12 @@ pub struct Preview
 }
 
 impl Preview {
+
+    fn article_name(&self) ->  String 
+    {
+        ARTICLE_PREFIX.to_owned() + &self.id.to_string()
+    }
+
     pub fn product_url(&self) -> String 
     {
         assert!(!self.category_name.is_empty());
@@ -64,9 +70,17 @@ impl Preview {
             acc + "/" + &s
         } );
 
-        cat + "/" + ARTICLE_PREFIX + &self.id.to_string()
+        cat + "/" + &self.article_name()
 
     }
+
+    pub fn product_path(&self) -> Vec<String>
+    {
+        let mut res = self.category_name.clone();
+        res.push(self.article_name());
+        res
+    }
+
 }
 
 

@@ -16,14 +16,14 @@ pub fn Footer() -> Element {
                     "Frakt & Vilkor"
                 },
                 li {
-                    a {
-                        href: "https://www.instagram.com/sjfconcept/",
+                    Link {
+                        to: "https://www.instagram.com/sjfconcept/",
                         "@sjfconcept"
                     }
                 }
                 li {
-                    a {
-                        href: "/admin/products",
+                    Link {
+                        to: crate::Route::CategoryList {},
                         "Inloggning"
                     }
                 }
