@@ -236,10 +236,10 @@ fn ProductTax(product: Signal<Product>) -> Element {
                     product.write().tax_rate = e.value().parse().unwrap();
                 },
                 id: "producttax",
-                option { value: 0,"0%"}
-                option { value: 6,"6%"}
-                option { value: 12,"12%"}
                 option { value: 25,"25%"}
+                option { value: 12,"12%"}
+                option { value: 6,"6%"}
+                option { value: 0,"0%"}
             }
         }
     }

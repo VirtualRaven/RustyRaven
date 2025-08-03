@@ -32,7 +32,6 @@ pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element
                 div {
                     div {
                         class: "img_container",
-                        style: "background-color: #{image.color}",
                         img {
                             srcset:  srcset,
                             onload: move |_|  {loaded.set(true)}
@@ -113,7 +112,7 @@ fn Latest() -> Element
                 div {
                     class: "info",
                     h1 {
-                        "{highlight.name}"
+                        "{highlight.name.to_uppercase() }"
                     }
                     h2 {
                         "{highlight.price}kr"

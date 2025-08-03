@@ -45,6 +45,19 @@ pub enum Route {
 fn HeaderFooter() -> Element {
     use_context_provider(|| Signal::new(None::<sjf_api::category::GetChildrenRsp>) );
     rsx! {
+        document::Link{
+            rel: "preconnect",
+            href:"https://fonts.googleapis.com"
+        }
+        document::Link{
+            rel: "preconnect",
+            href:"https://fonts.gstatic.com",
+            crossorigin: "true"
+        }
+        document:: Stylesheet {
+            href: r"https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Oxanium:wght@200..800&display=swap"
+        }
+
         components::Header {}
         div {
             class: "content",

@@ -144,7 +144,6 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp,sql
 {   
     let categories = crate::category::get_child_categories(req.category, req.recursive, POOL.get().unwrap()).await?;
     
-    warn!("get_previews: {:#?}",categories);
 
     struct  T {
         id: Option<i32>,

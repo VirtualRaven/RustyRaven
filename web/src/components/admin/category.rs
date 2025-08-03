@@ -22,6 +22,65 @@ struct Category {
     parent: Option<u32>
 }
 
+
+#[component]
+fn CategoryRemovalButton(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>  ) -> Element
+{
+    enum State {
+        Idle,
+        Removing,
+        Error,
+        Removed
+    };
+
+    let mut state = use_signal(||State::Idle);
+
+
+    let current_state = &*state.read();
+    match current_state 
+    {
+        State::Idle => rsx! {
+            span {
+               onclick: move |e| async move {
+                   e.stop_propagation();
+                
+                   state.set(State::Removing);
+                   let res = server::category::delete( AuthenticatedRequest { data: sjf_api::category::DeleteReq { id: category().id } }  ).await;
+                   if let  Ok(_) = res 
+                   {
+                       state.set(State::Removed);
+                       delete_fn.call(()); 
+                   }
+                   else{
+                    state.set(State::Error);
+                   }
+
+               },
+               "Ta bort!"
+            }
+        },
+
+        State::Removing => rsx! {
+            span {
+                "Tar bort..."
+            }
+        },
+
+        State::Error => rsx! {
+            span {
+                "Misslyckades"
+            }
+        },
+        State::Removed => rsx! {
+            span {
+                "Bort plockad"
+            }
+        }
+    }
+
+}
+
+
 #[component]
 fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>  ) -> Element
 {
@@ -117,10 +176,8 @@ fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>
                             onclick: move |_| {editable.set(true); },
                             "Redigera"
                         }
-                        span {
-                            onclick: move |_| {delete_fn.call(()); },
-                            "Ta bort!"
-                        }
+
+                        CategoryRemovalButton { category,delete_fn  }
 
                     }
 

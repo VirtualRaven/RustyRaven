@@ -34,7 +34,10 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
                             (true,true) => rsx! {
                                     div {
                                         "Ooops här var det tomt för tillfället, men kika gärna tillbaka senare."
-                                         Link {to: crate::Route::FrontPage {}, "Tillbaka till början" }
+                                        div {
+                                            class: "return-link",
+                                            Link {to: crate::Route::FrontPage {}, "Tillbaka till början" }
+                                        }
                                     }
                             },
                             (children_empty,previews_empty) => rsx! {

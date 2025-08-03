@@ -17,6 +17,12 @@ pub struct CreateRsp
 
 
 #[derive(Serialize,Deserialize,Debug,PartialEq,Clone)]
+pub struct DeleteReq 
+{
+    pub id: u32
+}
+
+#[derive(Serialize,Deserialize,Debug,PartialEq,Clone)]
 pub struct GetChildrenRsp 
 {
     pub children: Vec<(u32,String)>

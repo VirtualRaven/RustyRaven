@@ -8,6 +8,8 @@ use dioxus::logger::tracing::{info, warn};
 #[cfg(feature="server")]
 use sjf_db as db;
 
+use dioxus::prelude::server_fn::codec::Json;
+
 #[derive(Serialize,Deserialize,Debug,Clone)]
 #[serde(bound = "T: Serialize, for<'de2> T: Deserialize<'de2>")]
 pub struct AuthenticatedRequest<T>
@@ -98,7 +100,7 @@ impl From<Product> for db::Product
 }
 
 
-#[server]
+#[server(endpoint="product/get", input= dioxus::prelude::server_fn::codec::GetUrl)]
 pub async fn get_products(category: u32) -> Result<Vec<Product>,ServerFnError> 
 {
     use dioxus::prelude::ServerFnError::ServerError;
@@ -121,7 +123,7 @@ pub async fn get_products(category: u32) -> Result<Vec<Product>,ServerFnError>
 
 }
 
-#[server]
+#[server(endpoint="auth/product/get_images", input=Json)]
 pub async fn get_product_images(req: AuthenticatedRequest<u32> ) -> Result<BTreeMap<u32,Vec<u32>>,ServerFnError> 
 {
     use dioxus::prelude::ServerFnError::ServerError;
@@ -137,7 +139,7 @@ pub async fn get_product_images(req: AuthenticatedRequest<u32> ) -> Result<BTree
 
 }
 
-#[server]
+#[server(endpoint="auth/product/store", input=Json)]
 pub async fn store_product(req: AuthenticatedRequest<Product> ) -> Result<i32,ServerFnError> 
 {
     //IF authenticated
@@ -172,7 +174,7 @@ pub async fn store_product(req: AuthenticatedRequest<Product> ) -> Result<i32,Se
 
 }
 
-#[server]
+#[server(endpoint="auth/images/uploead", input=Json)]
 pub async fn upload_images(req: AuthenticatedRequest<Vec<Vec<u8>>>) -> Result<Vec<(u32,u32)>,ServerFnError>
 {
     info!("Uploading {} images", req.data.len());
@@ -201,36 +203,8 @@ pub async fn upload_images(req: AuthenticatedRequest<Vec<Vec<u8>>>) -> Result<Ve
 }
 
 
-pub mod category {
-    use super::*;
-    use dioxus::prelude::server_fn::codec::Json;
-    pub use sjf_api::category::*;
-
-
-
-
-#[server]
-pub async fn create(req: AuthenticatedRequest<CreateReq>) -> Result<CreateRsp,ServerFnError>
-{
-    error_logger(db::category::create(req.data).await)
-}
-#[server(endpoint="get_children",input=dioxus::prelude::server_fn::codec::GetUrl)]
-pub async fn get_children( p: Option<u32>) -> Result<GetChildrenRsp,ServerFnError>
-{
-    error_logger( db::category::get_children(p).await)
-}
-
-
-#[server(input=Json)]
-pub async fn update_name(req: AuthenticatedRequest<(u32,String)>) -> Result<(),ServerFnError>
-{
-    error_logger(db::category::update_name(req.data.0, req.data.1).await)
-}
-
-}
-
 use sjf_api::product::{GetPreviewsRequest, GetPreviewsResp};
-#[server(endpoint="get_previews",input=dioxus::prelude::server_fn::codec::GetUrl)]
+#[server(endpoint="get/previews",input=dioxus::prelude::server_fn::codec::GetUrl)]
 pub async fn get_previews( p: Option<u32>, r: bool, limit: u32) -> Result<GetPreviewsResp,ServerFnError>
 {
     warn!("get_previews: {:#?}",p);
@@ -243,7 +217,7 @@ pub async fn get_previews( p: Option<u32>, r: bool, limit: u32) -> Result<GetPre
 }
 
 use sjf_api::product::{GetProductRequest, GetProductResponse};
-#[server(endpoint="get_product",input=dioxus::prelude::server_fn::codec::GetUrl)]
+#[server(endpoint="get/product",input=dioxus::prelude::server_fn::codec::GetUrl)]
 pub async fn get_product( p: u32 ) -> Result<GetProductResponse,ServerFnError>
 {
     let r = GetProductRequest {
@@ -252,8 +226,45 @@ pub async fn get_product( p: u32 ) -> Result<GetProductResponse,ServerFnError>
     error_logger( db::product::get_product(r).await)
 }
 
+pub mod category {
+    use super::*;
+    use dioxus::prelude::server_fn::codec::Json;
+    pub use sjf_api::category::*;
 
-#[server(endpoint="get_category_and_product",input=dioxus::prelude::server_fn::codec::GetUrl)]
+
+
+#[server(endpoint="get/category/children",input=dioxus::prelude::server_fn::codec::GetUrl)]
+pub async fn get_children( p: Option<u32>) -> Result<sjf_api::category::GetChildrenRsp,ServerFnError>
+{
+    error_logger( db::category::get_children(p).await)
+}
+
+#[server(endpoint="auth/category/create", input=Json)]
+pub async fn create(req: AuthenticatedRequest<CreateReq>) -> Result<CreateRsp,ServerFnError>
+{
+    error_logger(db::category::create(req.data).await)
+}
+#[server(endpoint="auth/category/delete", input=Json)]
+pub async fn delete(req: AuthenticatedRequest<DeleteReq>) -> Result<(),ServerFnError>
+{
+    error_logger(db::category::delete(req.data).await)
+}
+
+
+
+#[server(endpoint="auth/category/update_name", input=Json)]
+pub async fn update_name(req: AuthenticatedRequest<(u32,String)>) -> Result<(),ServerFnError>
+{
+    error_logger(db::category::update_name(req.data.0, req.data.1).await)
+}
+
+}
+
+
+
+
+
+#[server(endpoint="get/category_and_product",input=dioxus::prelude::server_fn::codec::GetUrl)]
 pub async fn get_category_and_product(path: String ) -> Result<(u32, Option<sjf_api::product::Product>),ServerFnError>  
 { 
     use dioxus::prelude::ServerFnError::ServerError;

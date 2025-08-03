@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use tracing::{error, info};
-use sjf_api::category::{CreateReq,CreateRsp, GetChildrenRsp};
+use tracing::{error, info, trace};
+use sjf_api::category::{CreateReq, CreateRsp, DeleteReq, GetChildrenRsp};
 use sqlx::{query, query_as,query_file, Executor, Postgres};
 use crate::postgres::POOL;
 
@@ -44,6 +44,26 @@ pub async fn create(req: CreateReq ) -> Result<CreateRsp,sqlx::Error>
 }
 
 
+
+pub async fn delete(req: DeleteReq) -> Result<(), sqlx::Error>
+{
+    let mut tx = POOL.get().unwrap().begin().await?;
+
+    query!("DELETE FROM product_categories_hierarchy where descendant=$1",req.id as i32)
+    .execute(&mut *tx)
+    .await?;
+
+    query!("DELETE FROM product_categories where id=$1", req.id as i32)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(())
+
+}
+
+
 pub async fn get_children(id: Option<u32> ) -> Result<GetChildrenRsp,sqlx::Error>
 {
     struct Res {
@@ -78,7 +98,6 @@ where E: Executor<'c, Database = Postgres>,
         descendant: i32
     };
 
-    info!("Banan");
 
     match (root,recursive)
     {

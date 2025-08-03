@@ -1,8 +1,26 @@
 @use 'defines';
 
-body {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+h1,h2,h3 
+{
+  font-family: "Orbitron", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
 }
+
+body {
+    font-family: "Orbitron", sans-serif;
+}
+textarea, p {
+  font-family: "Oxanium", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 200; // Use a value from 200 to 800
+  font-style: normal;
+
+    
+}
+
+
 a {
     text-decoration: none;
     color:inherit;
@@ -17,16 +35,13 @@ a {
 }
 
 
-@media (max-width: 600px ) 
-{
-    .content {padding:0.5rem;}
-    footer {padding: 0.5rem !important; }
-}
 
 header {
     position: sticky;
     top:0;
     background-color: defines.$coolors1;
+    border-left: 10px solid defines.$mainbright;
+
     color: white;
     > div {
         padding: 1rem;
@@ -46,7 +61,8 @@ header {
             width: 2.5rem;
             height: $barheight;
             border-radius: 0.1rem;
-            background-color: defines.$coolors3;
+            //background-color: defines.$coolors3;
+            background-image:  linear-gradient(10deg,#7f7f81,#edf0f3,#7f8183);
             transition: all 0.2s ease-in-out;
             transform: rotate(0deg);
             &:nth-child(3n+2) {
@@ -73,7 +89,6 @@ header {
     h2 {
         margin:0;
         margin-left:1rem;
-        color:#EF8354;
         font-size: xx-large;
     }
     ul {
@@ -81,28 +96,36 @@ header {
 
     }
     ul.menu {
+        
+        border-left: 10px solid defines.$mainbright;
+        left: -10px;
         position: absolute;
-        left:0;
+        border-bottom-right-radius: 2rem;
         margin:0;
         min-width: 100px;
-        background-color: #2D3142;
+        background-color: defines.$coolors1;
         color: white;
         transform: scaleY(0);
         transform-origin: top;
         transition: transform 0.2s ease;
-        border-top: 2px solid #EF8354;
+        border-top: 2px solid defines.$mainbright;
         padding: 3rem;
         min-width: 300px;
         box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
     }
     li {
         font-size: x-large;
+        font-weight: 600;
         padding:1rem;
-        border-bottom: 2px solid #BFC0C0;
+        
+        border-bottom: 2px solid defines.$mainbright;
     }
     a {
         text-decoration: none;
-        color:white;
+        
+    background-image:  linear-gradient(45deg,#7f7f81,#edf0f3,#7f8183);
+    color: transparent;
+    background-clip: text; 
     }
     img.logo {
         height: 40px;
@@ -130,19 +153,24 @@ header {
 }
 
 footer {
-    background-color: #2D3142;
+    background-color: defines.$coolors1;
+    border-top: 10px solid defines.$mainbright;
     padding:2rem;
-    color:#4F5D75;
+
+
+
     display: flex;
     justify-content: flex-start;
     ul, li {
         display: inline-block;
         font-size:larger;
+         background-image:  linear-gradient(45deg,#7f7f81,#edf0f3,#7f8183);
+        color: transparent;
+        background-clip: text; 
     }
     li { margin-right: 1rem;}
     a {
         text-decoration: none;
-        color: #4F5D75;
     }
     > img {
         width: calc( min( 250px, 30vw) );
@@ -187,6 +215,7 @@ button {
     border: 0.2rem solid defines.$mainbright;
     color: defines.$mainbright;
     background: none;
+
     padding:1rem;
     border-radius: 0.5rem;
     font-weight: bold;
@@ -198,11 +227,13 @@ button {
 
 button.red {
     border-color:defines.$tomatored ;
-    color: defines.$tomatored;
+    background-color:defines.$tomatored ;
+    color: white;
 }
 button.green {
-    border-color:defines.$mossgreen ; 
-    color: defines.$mossgreen;
+    background-color:defines.$mainbright;
+    border-color:defines.$mainbright ; 
+    color: white;
 }
 
 .flex-start-container 
@@ -218,6 +249,9 @@ button.green {
     max-width: 1300px;
     margin-left: auto;
     margin-right: auto;
+    h1 {
+        color: defines.$coolors1;
+    }
     a {
         text-decoration: none;
         color:black;
@@ -228,12 +262,14 @@ button.green {
 {
     display: inline-block;
     margin: 1rem;
+    border-radius: 0.5rem;
     padding:0.5rem;
     background-color: white;
     width: 15rem;
     div.img_container {
         height: 15rem;
         img {
+            border-radius: 0.5rem;
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -304,6 +340,7 @@ button.green {
     }
     .price {
         font-weight: bold;
+        font-size: x-large;
         margin-right: 1rem;
     }
     p {
@@ -348,6 +385,12 @@ $layout-breakpoint-split: 1200px;
         flex-wrap: wrap;
         justify-content: center;
         > a {
+            > div {
+                background-image:  linear-gradient(20deg,#7f7f81,#edf0f3,#7f8183);
+                color: transparent;
+                background-clip: text; 
+            }
+            border-radius: 1rem;
             text-align: center;
             vertical-align: center;
             font-size: x-large;
@@ -360,6 +403,12 @@ $layout-breakpoint-split: 1200px;
             background-color: defines.$coolors1;
         }
     }
+}
+
+.category {
+    background-image:  linear-gradient(45deg,#7f7f81,#edf0f3,#7f8183);
+    color: transparent;
+    background-clip: text; 
 }
 
 .product-previews 
@@ -376,24 +425,58 @@ $layout-breakpoint-split: 1200px;
     display: flex;
     max-height: 40vh;
     text-align: center;
+    border-radius: 2rem;
     cursor: pointer;
     > div {
         width: 50%;;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
+        align-items: start;
         display: inline-flex;
     }
     img 
     {
+        border-radius: 1.5rem;
         max-width: 100%;
         max-height: 100%;
     }
     .info {
+        > h2, > h1 
+        {
+            background-image:  linear-gradient(20deg,#7f7f81,#edf0f3,#7f8183);
+            color: transparent;
+            background-clip: text; 
+        }
         padding:2rem;
+
 
     }
     margin-top: 2rem;
     padding:1rem;
     margin-bottom: 2rem;
+}
+
+.return-link {
+    margin-top: 1rem;
+    color: defines.$mainbright;
+}
+
+@media (max-width: 600px ) 
+{
+    header > div {
+        padding:0.5rem;
+    }
+    .content {padding:0.5rem;}
+    footer {padding: 0.5rem !important; }
+    .cart { 
+        padding:0.2rem;
+    }
+    .product-highlight {
+        .info {
+            padding:0.5rem;
+            h2 {
+                margin:0.2rem;
+            }
+        }
+    }
 }
