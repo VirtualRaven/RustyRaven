@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT product_images.image_id,variant_ids FROM product_images \r\nJOIN\r\n    (SELECT \r\n        image_id, \r\n        array_agg(\r\n            variant_id \r\n            ORDER BY \r\n                (width * height) \r\n            DESC  \r\n        ) as variant_ids\r\n        FROM image_variants GROUP BY image_id) as I\r\nON (product_images.image_id = I.image_id)\r\nWHERE product_id=$1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "image_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "variant_ids",
+        "type_info": "Int4Array"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "25b45534398c7ef448e6dd8611fd85a7d9cd4a40a1b26278d90441c2892e1ec5"
+}

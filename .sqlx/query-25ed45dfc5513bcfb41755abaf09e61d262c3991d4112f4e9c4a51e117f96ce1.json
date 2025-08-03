@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TYPE public.image_info_type AS\r\n(\r\n\tid integer,\r\n\tavg_color character varying(6),\r\n\tvariants image_variant[]\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "25ed45dfc5513bcfb41755abaf09e61d262c3991d4112f4e9c4a51e117f96ce1"
+}

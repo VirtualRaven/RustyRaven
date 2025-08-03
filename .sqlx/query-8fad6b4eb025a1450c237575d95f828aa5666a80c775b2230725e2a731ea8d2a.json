@@ -1,0 +1,112 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\r\nSELECT product.*, pv.names FROM product_paths pv\r\nRIGHT JOIN \r\n(\r\n    SELECT price,id,name,description,category, (i.images) as \"images: _\"  FROM products p\r\n    LEFT JOIN  product_image_info i\r\n    ON p.id = i.product_id \r\n    WHERE (id = $1) LIMIT 1\r\n) AS product\r\nON pv.id = product.category\r\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "price",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "category",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "images: _",
+        "type_info": {
+          "Custom": {
+            "name": "image_info_type[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "image_info_type",
+                  "kind": {
+                    "Composite": [
+                      [
+                        "id",
+                        "Int4"
+                      ],
+                      [
+                        "avg_color",
+                        "Varchar"
+                      ],
+                      [
+                        "variants",
+                        {
+                          "Custom": {
+                            "name": "image_variant[]",
+                            "kind": {
+                              "Array": {
+                                "Custom": {
+                                  "name": "image_variant",
+                                  "kind": {
+                                    "Composite": [
+                                      [
+                                        "width",
+                                        "Int4"
+                                      ],
+                                      [
+                                        "height",
+                                        "Int4"
+                                      ],
+                                      [
+                                        "variant",
+                                        "Int4"
+                                      ]
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "names",
+        "type_info": "VarcharArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "8fad6b4eb025a1450c237575d95f828aa5666a80c775b2230725e2a731ea8d2a"
+}

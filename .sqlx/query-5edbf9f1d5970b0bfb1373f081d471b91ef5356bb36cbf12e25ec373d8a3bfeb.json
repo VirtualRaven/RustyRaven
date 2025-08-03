@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TABLE IF NOT EXISTS product_categories_hierarchy(\r\n    ancestor integer NOT NULL,\r\n    descendant integer NOT NULL,\r\n    depth integer NOT NULL,\r\n    PRIMARY KEY(ancestor,descendant),\r\n    CONSTRAINT product_category_hierarchy_ancestor_fkey FOREIGN key(ancestor) REFERENCES product_categories(id),\r\n    CONSTRAINT product_category_hierarchy_decendant_fkey FOREIGN key(descendant) REFERENCES product_categories(id)\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "5edbf9f1d5970b0bfb1373f081d471b91ef5356bb36cbf12e25ec373d8a3bfeb"
+}

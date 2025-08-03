@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT variant_id, (width * height) AS size FROM image_variants WHERE image_id=$1 ORDER BY size ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "variant_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "size",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "616f2cd77b4b69b6c5e6c588cae427b37c752c899dd0b2f6d2fb0a91a55bc4cf"
+}

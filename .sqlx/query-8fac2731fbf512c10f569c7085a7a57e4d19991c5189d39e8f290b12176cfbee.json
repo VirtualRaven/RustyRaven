@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE UNIQUE INDEX IF NOT EXISTS unique_image_product_association ON public.product_images USING btree (image_id, product_id);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "8fac2731fbf512c10f569c7085a7a57e4d19991c5189d39e8f290b12176cfbee"
+}

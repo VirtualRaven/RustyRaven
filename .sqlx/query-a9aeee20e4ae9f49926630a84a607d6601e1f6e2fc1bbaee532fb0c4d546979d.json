@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE from product_images where product_id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a9aeee20e4ae9f49926630a84a607d6601e1f6e2fc1bbaee532fb0c4d546979d"
+}

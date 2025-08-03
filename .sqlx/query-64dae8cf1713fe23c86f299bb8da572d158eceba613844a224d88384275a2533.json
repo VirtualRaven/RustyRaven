@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE UNIQUE INDEX IF NOT EXISTS product_image_info_index  on product_image_info (product_id)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "64dae8cf1713fe23c86f299bb8da572d158eceba613844a224d88384275a2533"
+}

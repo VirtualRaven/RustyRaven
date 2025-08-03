@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO product_categories_hierarchy (ancestor,descendant,depth) VALUES($1,$1,$2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0954d729aee855be574f06978ba7e17bbd9955c0b62ee7fc0ee21f3bf7183777"
+}

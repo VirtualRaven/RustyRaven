@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TYPE public.image_variant AS\r\n(\r\n    width INTEGER,\r\n    height INTEGER,\r\n    variant INTEGER\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "2d9dc0465442667456939367b3337a72bab44063c3f50b3f2567ac2d19bb67f4"
+}

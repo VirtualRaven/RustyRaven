@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\r\nCREATE MATERIALIZED VIEW IF NOT EXISTS product_paths AS\r\nWITH relative_depths AS (\r\n    SELECT \r\n        h1.ancestor,\r\n        h1.descendant,\r\n        h2.depth AS ancestor_depth\r\n    FROM product_categories_hierarchy h1\r\n    LEFT JOIN product_categories_hierarchy h2\r\n        ON h1.ancestor = h2.ancestor AND h1.ancestor = h2.descendant\r\n)\r\nSELECT \r\n    rd.descendant AS id,\r\n    ARRAY_AGG(c.name ORDER BY rd.ancestor_depth) AS names,\r\n    ARRAY_AGG(c.id ORDER BY rd.ancestor_depth) AS ids\r\nFROM relative_depths rd\r\nJOIN product_categories c ON c.id = rd.ancestor\r\nGROUP BY rd.descendant;\r\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "d5a0237ee38d141dd94362ca557a3a54995877f68671a2680ad2ac2a41d47f4d"
+}

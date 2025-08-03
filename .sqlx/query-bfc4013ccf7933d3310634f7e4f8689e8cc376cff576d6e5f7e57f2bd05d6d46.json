@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT pc.id,pc.name  FROM product_categories pc JOIN product_categories_hierarchy ph ON (pc.id = ph.descendant) WHERE ph.ancestor = ph.descendant AND ph.depth = 0",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "bfc4013ccf7933d3310634f7e4f8689e8cc376cff576d6e5f7e57f2bd05d6d46"
+}

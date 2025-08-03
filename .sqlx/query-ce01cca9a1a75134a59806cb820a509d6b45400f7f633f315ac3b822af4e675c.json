@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO products  (id,      name,price,description,quantity, created,updated,  category,tax_rate)\r\n            VALUES    (DEFAULT, $1,  $2,   $3,         $4,       DEFAULT,NOW(),    $5,$6)\r\nRETURNING id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4",
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ce01cca9a1a75134a59806cb820a509d6b45400f7f633f315ac3b822af4e675c"
+}

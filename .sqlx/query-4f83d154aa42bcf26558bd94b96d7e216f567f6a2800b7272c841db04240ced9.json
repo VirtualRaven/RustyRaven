@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TABLE IF NOT EXISTS product_images(\r\n    image_id integer NOT NULL,\r\n    product_id integer NOT NULL,\r\n    CONSTRAINT product_images_image_id_fkey FOREIGN key(image_id) REFERENCES images(image_id),\r\n    CONSTRAINT product_images_product_id_fkey FOREIGN key(product_id) REFERENCES products(id)\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "4f83d154aa42bcf26558bd94b96d7e216f567f6a2800b7272c841db04240ced9"
+}

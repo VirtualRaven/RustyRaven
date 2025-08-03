@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE MATERIALIZED VIEW IF NOT EXISTS product_image_info AS\r\nSELECT p.product_id as product_id, array_agg( (p.image_id,(I.C).avg_color, (I.C).variants)::image_info_type ORDER BY p.image_id ASC )::image_info_type[] as images FROM  product_images p\r\nLEFT JOIN \r\n    (\r\n        SELECT \r\n          (iv.image_id , avg_color,  ARRAY_AGG( (width,height,variant_id)::image_variant ORDER BY (width*height) ASC))::image_info_type as C\r\n        FROM image_variants iv\r\n        LEFT JOIN (\r\n        \tSELECT image_id, avg_color FROM images\r\n        ) AS K\r\n        ON iv.image_id = K.image_id\r\n        GROUP BY (iv.image_id, avg_color)\r\n    ) AS I \r\nON p.image_id = ((I.c)::image_info_type).id\r\nGROUP BY p.product_id;\r\n\r\n\r\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "b268ccf947feb1e5dfbbfbf39abea818c381002b501f44edf7b85245962b55b8"
+}

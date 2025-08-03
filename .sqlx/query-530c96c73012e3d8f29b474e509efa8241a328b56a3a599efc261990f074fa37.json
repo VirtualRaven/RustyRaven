@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE UNIQUE INDEX IF NOT EXISTS product_paths_index  on product_paths (id)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "530c96c73012e3d8f29b474e509efa8241a328b56a3a599efc261990f074fa37"
+}

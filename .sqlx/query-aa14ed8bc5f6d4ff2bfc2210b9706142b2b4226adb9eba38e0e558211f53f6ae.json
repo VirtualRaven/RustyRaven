@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TABLE IF NOT EXISTS images(\r\n    image_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,\r\n    avg_color varchar(6) NOT NULL,\r\n    PRIMARY KEY(image_id)\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "aa14ed8bc5f6d4ff2bfc2210b9706142b2b4226adb9eba38e0e558211f53f6ae"
+}

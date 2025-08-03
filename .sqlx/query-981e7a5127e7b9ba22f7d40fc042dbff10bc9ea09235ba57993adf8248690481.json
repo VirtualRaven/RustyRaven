@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TABLE IF NOT EXISTS image_variants(\r\n    variant_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,\r\n    image_id integer NOT NULL,\r\n    width integer NOT NULL,\r\n    height integer NOT NULL,\r\n    PRIMARY KEY(variant_id),\r\n    CONSTRAINT image_variants_image_id_fkey FOREIGN key(image_id) REFERENCES images(image_id),\r\n    CONSTRAINT positive_width CHECK (width > 0),\r\n    CONSTRAINT positive_height CHECK (height > 0)\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "981e7a5127e7b9ba22f7d40fc042dbff10bc9ea09235ba57993adf8248690481"
+}

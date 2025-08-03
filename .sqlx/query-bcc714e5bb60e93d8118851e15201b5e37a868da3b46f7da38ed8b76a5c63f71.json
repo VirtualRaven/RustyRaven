@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \r\n    p.id,p.name,p.price,p.description,p.quantity,p.created,p.updated, image_ids, tax_rate,category\r\nfrom products p \r\nLEFT JOIN \r\n    (\r\n        SELECT \r\n            product_id, ARRAY_AGG(image_id) as image_ids \r\n        FROM product_images \r\n        GROUP BY product_id\r\n    ) AS I \r\nON p.id = i.product_id \r\nWHERE category = $1\r\nORDER BY p.name ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "price",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "quantity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "created",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "image_ids",
+        "type_info": "Int4Array"
+      },
+      {
+        "ordinal": 8,
+        "name": "tax_rate",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "category",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "bcc714e5bb60e93d8118851e15201b5e37a868da3b46f7da38ed8b76a5c63f71"
+}

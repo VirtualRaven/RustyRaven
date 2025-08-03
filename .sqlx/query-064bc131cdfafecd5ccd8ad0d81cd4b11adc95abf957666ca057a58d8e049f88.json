@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH D AS (SELECT depth from product_categories_hierarchy WHERE (descendant=ancestor AND ancestor=$1)) SELECT descendant FROM product_categories_hierarchy WHERE (ancestor=$1 AND depth = (SELECT depth from D) ) ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "descendant",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "064bc131cdfafecd5ccd8ad0d81cd4b11adc95abf957666ca057a58d8e049f88"
+}

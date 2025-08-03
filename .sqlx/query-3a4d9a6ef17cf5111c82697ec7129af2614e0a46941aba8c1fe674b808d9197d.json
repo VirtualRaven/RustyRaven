@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\r\nwith inserted_id AS (\r\n    INSERT INTO images (avg_color) VALUES ($1)\r\n    RETURNING image_id\r\n)\r\n\r\nINSERT INTO image_variants (image_id,width,height) VALUES \r\n    ( (SELECT * FROM inserted_id), $2, $3 ),\r\n    ( (SELECT * FROM inserted_id), $4, $5 ),\r\n    ( (SELECT * FROM inserted_id), $6, $7 ),\r\n    ( (SELECT * FROM inserted_id), $8, $9 )\r\nRETURNING image_id, variant_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "image_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "variant_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "3a4d9a6ef17cf5111c82697ec7129af2614e0a46941aba8c1fe674b808d9197d"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT descendant FROM product_categories_hierarchy ORDER BY depth ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "descendant",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2777a79fb9a45739655a80e9b86ce0d73d76c0ec4a5d5bc4199ed767d29e398a"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO product_categories_hierarchy (ancestor,descendant,depth) SELECT ancestor,$1,$2 FROM product_categories_hierarchy where descendant=$3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "abfb8b95a03b75b63be2857b665f9007e98071bba96feb3168b586dff3904a20"
+}

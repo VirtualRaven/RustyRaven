@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TABLE IF NOT EXISTS product_categories(\r\n    id integer GENERATED ALWAYS AS IDENTITY NOT NULL,\r\n    name varchar(255) NOT NULL,\r\n    PRIMARY KEY(id)\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "264a95b54ec468c7366a3c1b99bafc22fec602a41a7683cffbeae969de973fcd"
+}
