@@ -12,7 +12,7 @@ COPY .sqlx/ builddir/.sqlx/
 COPY web/ builddir/web/
 COPY 3pp/ builddir/3pp/
 RUN ls builddir && cd builddir/web && \ 
-    dx bundle  --fullstack --out-dir ../../outputdir --debug-symbols --server-profile server-dev
+    dx bundle  --fullstack --out-dir ../../outputdir --release
 
 
 FROM alpine:3.22 
