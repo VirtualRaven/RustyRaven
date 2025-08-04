@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-const LOGO: Asset = asset!("/assets/SJF-logo.svg");
+pub const FOOTER_LOGO: Asset = asset!("/assets/SJF-logo.svg");
 
 
 #[component]
@@ -10,10 +10,10 @@ pub fn Footer() -> Element {
         footer {
             ul {
                 li {
-                    "Kontakt"
-                },
-                li {
-                    "Frakt & Vilkor"
+                    Link {
+                        to: crate::Route::TermsAndConditions {  },
+                        "Frakt & Vilkor"
+                    }
                 },
                 li {
                     Link {
@@ -29,7 +29,7 @@ pub fn Footer() -> Element {
                 }
             },
             img {
-                src: LOGO
+                src: FOOTER_LOGO
             },
         }
     }

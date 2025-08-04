@@ -34,12 +34,14 @@ impl Image {
     }
 }
 
+pub use u32 as ProductId;
 
 #[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
 pub struct Product
 {
-    pub id: u32,
+    pub id: ProductId,
     pub name: String,
+    pub stock: Option<u32>,
     pub description: String,
     pub category_name: Vec<String>, 
     pub price: u32,

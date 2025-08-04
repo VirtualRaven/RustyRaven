@@ -194,6 +194,7 @@ pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sq
     struct  T {
         id: Option<i32>,
         price: Option<i32>,
+        quantity: Option<i32>,
         description: Option<String>,
         name: Option<String>,
         images: Option<Vec<ImageInfo>>,
@@ -214,6 +215,7 @@ pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sq
             name: t.name.unwrap(),
             description: t.description.unwrap(),
             price: t.price.unwrap() as u32,
+            stock: t.quantity.map(|f| f as u32),
             images: t.images.unwrap_or_default().into_iter().map( |i|
             {
                 sjf_api::product::Image {

@@ -80,6 +80,7 @@ pub fn Header() -> Element {
         document::Link { rel: "stylesheet", href: MAIN_SCSS }
         header {
             div {
+                class: "header-content",
                 nav {
                     onclick: move |_| {
                         menu_state.with_mut(|state| {*state=state.toggle();} );
@@ -106,9 +107,10 @@ pub fn Header() -> Element {
                 DynamicMenu {}
 
                 li { 
-                    Link {to: crate::Route::FrontPage {}, "Om SJF" }
+                    Link {to: crate::Route::About {}, "Om SJF" }
                 }
-            }
+            },
+            components::CartContents {}
         }
     }
 }

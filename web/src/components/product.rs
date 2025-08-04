@@ -1,3 +1,4 @@
+
 use dioxus::prelude::*;
 
 #[component]
@@ -46,7 +47,69 @@ pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> El
 
 }
 #[component]
+pub fn AddToCartButton(product: ReadOnlySignal<sjf_api::product::Product>) -> Element {
+
+    let mut cart = crate::components::cart::use_cart();
+
+    let added = use_memo( move || {
+        let cart = cart.read();
+        let product = product.read();
+        let id = product.id;
+        cart.has_item(&id) 
+    }  );
+
+    let stock = product.read().stock;
+
+
+    rsx! {
+
+        if let Some(0) = stock 
+        {
+            div {
+                class: "outofstock",
+                "Slutsåld!"
+            }
+        }
+        else {
+            button { 
+                onclick: move |_| {
+                    cart.with_mut(move |cart|
+                        cart.add_item(product.read().clone())
+                    );
+                },
+                if added() {
+                    "Tillagd!"
+                }
+                else 
+                {
+                    "Lägg i varukorg" 
+                }
+            }
+            if let Some(s) = stock 
+            {
+                if s < 10 
+                {
+                    span {
+                        class: "lowstock",
+                        "Endast {s} kvar i lager"
+                    }
+                }
+            }
+
+        }
+
+    }
+}
+
+
+
+#[component]
 pub fn Product(product: ReadOnlySignal<sjf_api::product::Product>) -> Element {
+
+
+
+
+
     
     rsx! 
     {
@@ -56,20 +119,17 @@ pub fn Product(product: ReadOnlySignal<sjf_api::product::Product>) -> Element {
 
         div {
             class: "product",
-
-
-
             div {
                 class:"split-when-large",
                 div {
-                    ProductImages {images: product().images}
+                    ProductImages {images: product().images  }
                 }
 
                 div {
                     class: "product-details",
                     h2 { "{product().name}"}
                     span { class: "price", "{product().price}kr"}
-                    button { "Lägg i varukorg" }
+                    AddToCartButton { product  }
                     p {
                         "{product().description}"
                     }

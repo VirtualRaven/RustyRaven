@@ -25,7 +25,7 @@ cfg_if::cfg_if! {
 //const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 
-use crate::components::CategoryList;
+use crate::components::{CategoryList,About,TermsAndConditions};
 #[derive(Routable, PartialEq, Clone)]
 pub enum Route {
     #[layout(HeaderFooter)]
@@ -35,8 +35,10 @@ pub enum Route {
     CategoryList {},
     #[route("/produkter/:..segments")]
     ProductPage { segments: Vec<String> },
-    //#[route("/produkter/{category_id}")]
-    //FrontPage {},
+    #[route("/om")]
+    About {},
+    #[route("/användarvilkor")]
+    TermsAndConditions {},
     #[route("/:..segments")]
     NotFound { segments: Vec<String> }
 }
@@ -44,6 +46,7 @@ pub enum Route {
 #[component]
 fn HeaderFooter() -> Element {
     use_context_provider(|| Signal::new(None::<sjf_api::category::GetChildrenRsp>) );
+    use_context_provider(|| Signal::new( components::CartState::load() ));
     rsx! {
         document::Link{
             rel: "preconnect",

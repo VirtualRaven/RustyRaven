@@ -1,4 +1,5 @@
 @use 'defines';
+@use 'cart';
 
 h1,h2,h3 
 {
@@ -12,18 +13,17 @@ body {
     font-family: "Orbitron", sans-serif;
 }
 textarea, p {
+
   font-family: "Oxanium", sans-serif;
   font-optical-sizing: auto;
   font-weight: 200; // Use a value from 200 to 800
   font-style: normal;
-
-    
 }
-
 
 a {
     text-decoration: none;
     color:inherit;
+
 }
 
 .content {
@@ -41,9 +41,9 @@ header {
     top:0;
     background-color: defines.$coolors1;
     border-left: 10px solid defines.$mainbright;
-
     color: white;
-    > div {
+
+    > div.header-content {
         padding: 1rem;
         display: flex;
         align-items: center;
@@ -96,13 +96,12 @@ header {
 
     }
     ul.menu {
-        
         border-left: 10px solid defines.$mainbright;
         left: -10px;
+
         position: absolute;
         border-bottom-right-radius: 2rem;
         margin:0;
-        min-width: 100px;
         background-color: defines.$coolors1;
         color: white;
         transform: scaleY(0);
@@ -137,7 +136,6 @@ header {
 }
  
 
-
 .cart {
     display: inline-block;
     margin-left: auto;
@@ -156,10 +154,8 @@ footer {
     background-color: defines.$coolors1;
     border-top: 10px solid defines.$mainbright;
     padding:2rem;
-
-
-
     display: flex;
+
     justify-content: flex-start;
     ul, li {
         display: inline-block;
@@ -177,7 +173,6 @@ footer {
         margin-left: auto;
     }
 }
-
 .close-container {
     $size: 40px;
     $width:  $size;
@@ -189,7 +184,6 @@ footer {
     width: $width;
     height: $height;
     cursor: pointer;
-
     .leftright, .rightleft {
         height: 4px;
         width: $width;
@@ -209,7 +203,6 @@ footer {
         .rightleft { transform: rotate( 45deg); }
     }
 }
-
 
 button {
     border: 0.2rem solid defines.$mainbright;
@@ -235,7 +228,6 @@ button.green {
     border-color:defines.$mainbright ; 
     color: white;
 }
-
 .flex-start-container 
 {
     display: flex;
@@ -244,7 +236,6 @@ button.green {
         margin-left: auto;
     }
 }
-
 .front_page {
     max-width: 1300px;
     margin-left: auto;
@@ -328,7 +319,6 @@ button.green {
         }
     }
 }
-
 .product {
     background-color: white;
     padding:1rem;
@@ -346,6 +336,7 @@ button.green {
     p {
         max-width: 700px;
     }
+
 }
 
 
@@ -463,7 +454,7 @@ $layout-breakpoint-split: 1200px;
 
 @media (max-width: 600px ) 
 {
-    header > div {
+    header > div.header-content {
         padding:0.5rem;
     }
     .content {padding:0.5rem;}
@@ -479,4 +470,55 @@ $layout-breakpoint-split: 1200px;
             }
         }
     }
+}
+
+.lowstock, .outofstock
+{
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.outofstock {
+    color: defines.$tomatored;
+}
+
+.about {
+    
+    padding:1rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0.5rem;
+    background-color: defines.$coolors1;
+    color: white;
+    h2 {
+        padding-bottom: 0.5rem;
+        border-bottom: 10px solid defines.$mainbright;
+    }
+
+    > div:last-child 
+    {
+        padding:1rem;
+        img {
+        margin-right: auto;
+        margin-left: auto;
+            max-width: 200;
+        }
+    }
+}
+
+.terms {
+    padding:1rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0.5rem;
+    background-color: white;
+    li {
+        font-family: "Oxanium", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: 200; // Use a value from 200 to 800
+        font-style: normal;
+    }
+
 }

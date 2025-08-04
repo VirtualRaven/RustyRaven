@@ -16,13 +16,17 @@ impl MenuState
     }
 }
 
+mod about;
+pub use about::*;
+mod terms;
+pub use terms::TermsAndConditions;
 
 mod header;
 pub use header::*;
 mod footer;
 pub use footer::*;
 mod cart;
-pub use cart::Cart;
+pub use cart::{Cart,CartState,CartContents};
 mod admin;
 pub use admin::product::list::ProductList;
 pub use admin::category::CategoryList;

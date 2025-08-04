@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\r\nSELECT product.*, pv.names FROM product_paths pv\r\nRIGHT JOIN \r\n(\r\n    SELECT price,id,name,description,category, (i.images) as \"images: _\"  FROM products p\r\n    LEFT JOIN  product_image_info i\r\n    ON p.id = i.product_id \r\n    WHERE (id = $1) LIMIT 1\r\n) AS product\r\nON pv.id = product.category\r\n",
+  "query": "\r\nSELECT product.*, pv.names FROM product_paths pv\r\nRIGHT JOIN \r\n(\r\n    SELECT price,id,name,description,category,quantity, (i.images) as \"images: _\"  FROM products p\r\n    LEFT JOIN  product_image_info i\r\n    ON p.id = i.product_id \r\n    WHERE (id = $1) LIMIT 1\r\n) AS product\r\nON pv.id = product.category\r\n",
   "describe": {
     "columns": [
       {
@@ -30,6 +30,11 @@
       },
       {
         "ordinal": 5,
+        "name": "quantity",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
         "name": "images: _",
         "type_info": {
           "Custom": {
@@ -88,7 +93,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "names",
         "type_info": "VarcharArray"
       }
@@ -105,8 +110,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "8fad6b4eb025a1450c237575d95f828aa5666a80c775b2230725e2a731ea8d2a"
+  "hash": "811f4c302d63097a9384ca8049d3ad3fc6fea33a755ba76f74e86c3f38b579c4"
 }
