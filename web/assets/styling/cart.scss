@@ -51,7 +51,14 @@
             background-color: defines.$mainbrightlight;
         }
 
+        &.disabled {
+            background-color: defines.$mainbrightdark !important;
+            color: defines.$mainbrightdarktext;
+            cursor: not-allowed;
+        }
     }
+
+
     & > div:first-child 
     {
         background-color: defines.$coolors1;

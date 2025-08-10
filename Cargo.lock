@@ -4106,10 +4106,12 @@ name = "sjf_db"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "futures-util",
  "once_cell",
  "serde",
  "sjf_api",
  "sqlx",
+ "thiserror 2.0.12",
  "tokio",
  "tracing",
 ]
@@ -4272,6 +4274,7 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "url",
+ "uuid",
  "webpki-roots 0.26.11",
 ]
 
@@ -4354,6 +4357,7 @@ dependencies = [
  "stringprep",
  "thiserror 2.0.12",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -4392,6 +4396,7 @@ dependencies = [
  "stringprep",
  "thiserror 2.0.12",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -4418,6 +4423,7 @@ dependencies = [
  "thiserror 2.0.12",
  "tracing",
  "url",
+ "uuid",
 ]
 
 [[package]]

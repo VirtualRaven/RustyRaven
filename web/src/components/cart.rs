@@ -1,9 +1,9 @@
 
 use std::collections::BTreeMap;
 
-use dioxus::prelude::*;
+use dioxus::prelude::{server_fn::ServerFn, *};
 use crate::components::{MenuState};
-use sjf_api::product::{ProductId,Product};
+use sjf_api::{checkout::CheckoutRequest, product::{Product, ProductId}};
 
 const CART_ICON: Asset = asset!("/assets/cart.png");
 
@@ -27,6 +27,16 @@ impl CartState {
     pub fn has_item(&self, id: &ProductId) -> bool
     {
         self.contents.get(id).is_some()
+    }
+    pub fn is_empty(&self) -> bool
+    {
+        self.contents.is_empty()
+    }
+
+    pub async fn checkout(&self) -> Result<String,ServerFnError>
+    {
+        let req  = CheckoutRequest { order: self.contents.clone().into_iter().map(|(id,(_,quantity))| { (id,quantity) }).collect() };
+        crate::server::checkout(req).await
     }
 
     pub fn add_item(&mut self, product: Product)
@@ -176,6 +186,86 @@ fn CartCounter() -> Element {
 }
 
 #[component]
+pub fn CheckoutButton()-> Element 
+{
+    enum CheckoutState {
+        Idle,
+        Pending,
+        Error(ServerFnError),
+        Accepted
+    }
+
+    let mut state = use_signal(|| CheckoutState::Idle );
+    let cart_state = use_cart();
+
+    let is_empty = use_memo(move || {
+        cart_state.read().is_empty()
+    });
+
+
+    use CheckoutState::*;
+
+
+    let current_state = &*state.read();
+    match current_state {
+        Idle => rsx!{
+
+            if is_empty()
+            {
+                div {
+                    class: "checkout disabled",
+                    "Till kassa"
+                }
+
+            }
+            else {
+                div {
+                    class: "checkout",
+                    onclick: move |_| async move {
+
+                        state.set(Pending);
+                        let cart_state = &*cart_state.read();
+                        match cart_state.checkout().await
+                        {
+                            Err(e) => {
+                                state.set(Error(e))
+                            },
+                            Ok(_) => {
+                                state.set(Accepted)
+                            }
+                        }
+                    },
+                    "Till kassa"
+                }
+            }
+
+        },
+        Pending => rsx! {
+            div {
+                class: "checkout",
+                "Processerar..."
+            }
+        },
+        Error(s) => rsx! {
+            div {
+                class:  "checkout",
+                "Misslyckades"
+            }
+        },
+        Accepted => rsx! {
+            div {
+                class:  "checkout",
+                "Omdirigerar till stripe..."
+            }
+        }
+    }
+
+
+
+
+}
+
+#[component]
 pub fn CartContents() -> Element {
     let cart_state = use_cart();
     let content_class =  use_memo( move ||  {
@@ -204,10 +294,7 @@ pub fn CartContents() -> Element {
                         "Totalt {total}kr"
                     }
                 }
-                div {
-                    class: "checkout",
-                    "Till kassa"
-                }
+                CheckoutButton {}
             }
     }
 

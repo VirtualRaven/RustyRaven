@@ -5,7 +5,7 @@ RIGHT JOIN
     FROM products p
     LEFT JOIN  product_image_info i
     ON p.id = i.product_id 
-    WHERE ( (quantity!=0 or quantity IS NULL) and category=ANY($1)) 
+    WHERE (category=ANY($1)) 
 ) AS product
 ON pv.id = product.category
 ORDER BY created DESC

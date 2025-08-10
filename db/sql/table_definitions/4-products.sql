@@ -11,6 +11,6 @@ CREATE TABLE IF NOT EXISTS products(
     PRIMARY KEY(id),
     CONSTRAINT products_category_fkey FOREIGN key(category) REFERENCES product_categories(id),
     CONSTRAINT positive_price CHECK (price > 0),
-    CONSTRAINT positive_quantity CHECK ((quantity IS NULL) OR (quantity > 0)),
+    CONSTRAINT positive_quantity CHECK ((quantity IS NULL) OR (quantity >= 0)),
     CONSTRAINT reasonable_tax_rate CHECK ((tax_rate = 0) OR (tax_rate = 6) OR (tax_rate = 12) OR (tax_rate = 25))
 );

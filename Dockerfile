@@ -10,7 +10,6 @@ COPY image/ builddir/image/
 COPY .cargo/ builddir/.cargo/
 COPY .sqlx/ builddir/.sqlx/
 COPY web/ builddir/web/
-COPY 3pp/ builddir/3pp/
 RUN ls builddir && cd builddir/web && \ 
     dx bundle  --fullstack --out-dir ../../outputdir --release
 

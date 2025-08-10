@@ -2,9 +2,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
 use dioxus::prelude::server_fn::error::NoCustomError;
+use dioxus::prelude::server_fn::ServerFn;
 use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
 use dioxus::logger::tracing::{info, warn};
+use sjf_api::checkout::CheckoutRequest;
 #[cfg(feature="server")]
 use sjf_db as db;
 
@@ -315,3 +317,18 @@ pub async fn get_category_and_product(path: String ) -> Result<(u32, Option<sjf_
     }
         
 }
+
+#[server(endpoint="checkout",input=dioxus::prelude::server_fn::codec::PostUrl)]
+pub async fn checkout(req: CheckoutRequest ) -> Result<String ,ServerFnError> 
+{
+    match db::checkout::make_reservation(req).await
+    {
+        Err(e) => {
+            info!("Checkout failed {}",e);
+            Err(ServerFnError::ServerError("Product reservation failure".into()))
+        },
+        Ok(_) => {
+            Ok(String::from(""))
+        }
+    }
+} 

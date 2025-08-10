@@ -42,6 +42,8 @@ pub async fn init() -> Result<(),sqlx::Error>
         query_file!("sql/table_definitions/4-products.sql").execute(&mut *tx).await?;
         query_file!("sql/table_definitions/5-product_images.sql").execute(&mut *tx).await?;
         query_file!("sql/table_definitions/6-product_association_index.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/7-pending_orders.sql").execute(&mut *tx).await?;
+        query_file!("sql/table_definitions/8-product_reservations.sql").execute(&mut *tx).await?;
         tx.commit().await?;
     }
 
