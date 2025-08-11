@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use stripe::{
-    generated::{billing::tax_rate, core::tax_code}, CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession, CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData, CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection, CreateCheckoutSessionShippingAddressCollectionAllowedCountries, CreateCustomer, CreatePrice, CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, Price, Product, TaxRate, TaxRateId
+    generated::{billing::tax_rate, core::tax_code}, CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession, CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData, CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData, CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection, CreateCheckoutSessionShippingAddressCollectionAllowedCountries, CreateCustomer, CreatePrice, CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, Price, Product, TaxRate, TaxRateId
 };
 use tracing::info;
 
@@ -107,6 +107,13 @@ pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
 
     let items = sjf_db::checkout::get_order(&uuid).await?;
 
+    let metadata = {
+        let mut map: HashMap<String,String> = HashMap::new();
+        map.insert("reservation".into(), uuid.clone());
+        map.insert("app".into(), NAME.into());
+        map.insert("app-version".into(), VERSION.into());
+        map
+    };
 
     let items = items.into_iter().map(|item|{
 
@@ -127,6 +134,12 @@ pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
                             images: image_urls  ,
                             name: item.name,
                             tax_code: None,
+                            metadata: Some({
+                                let mut map = metadata.clone();
+                                map.insert("article-number".into(), format!("artikel-{}",item.product_id));
+                                map
+
+                            }),
                             ..Default::default()
                         }
                     ),
@@ -140,6 +153,13 @@ pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
 
     })
     .collect::<Result<Vec<_>,_>>()?;
+    let metadata = {
+        let mut map: HashMap<String,String> = HashMap::new();
+        map.insert("reservation".into(), uuid.clone());
+        map.insert("app".into(), NAME.into());
+        map.insert("app-version".into(), VERSION.into());
+        map
+    };
 
 
     let checkout_session = {
@@ -151,15 +171,16 @@ pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
         params.cancel_url = Some(&cancel_url);
         params.success_url = Some(&success_url);
         params.client_reference_id = Some(uuid.as_ref());
-        params.metadata = Some(
-            {
-                let mut map: HashMap<String,String> = HashMap::new();
-                map.insert("reservation".into(), uuid.clone());
-                map.insert("app".into(), NAME.into());
-                map.insert("app-version".into(), VERSION.into());
-                map
+        params.customer_creation = Some(
+            stripe::CheckoutSessionCustomerCreation::Always
+        );
+        params.payment_intent_data = Some(
+            CreateCheckoutSessionPaymentIntentData {
+                metadata: Some(metadata.clone()),
+                ..Default::default()
             }
         );
+        params.metadata = Some(metadata);
         params.phone_number_collection = Some(
             CreateCheckoutSessionPhoneNumberCollection {
                 enabled: true
