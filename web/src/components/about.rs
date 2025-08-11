@@ -5,7 +5,8 @@ pub fn About() -> Element
 {
 
     rsx! {
-
+        
+        document::Title { "SJF Concept - Om butiken" }
         div {
             class: "about",
             h2 {"OM - SJF CONCEPT"}

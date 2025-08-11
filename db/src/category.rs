@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use tracing::{error, info, trace};
+use tracing::{error };
 use sjf_api::category::{CreateReq, CreateRsp, DeleteReq, GetChildrenRsp};
 use sqlx::{query, query_as,query_file, Executor, Postgres};
 use crate::postgres::POOL;
@@ -96,7 +96,7 @@ where E: Executor<'c, Database = Postgres>,
 {
     struct T {
         descendant: i32
-    };
+    }
 
 
     match (root,recursive)
@@ -136,7 +136,7 @@ pub async fn update_name(id: u32, name: String) -> Result<(),sqlx::Error>
 pub(crate) async fn update_paths_view<'c,E>( e : E, create: bool  ) -> Result<(),sqlx::Error> 
 where E: Copy + Executor<'c, Database = Postgres>,
 {
-    if (create)
+    if create
     {
         query_file!("sql/materialized_product_paths.sql").execute(e).await?;
         query!("CREATE UNIQUE INDEX IF NOT EXISTS product_paths_index  on product_paths (id)").execute(e).await?;

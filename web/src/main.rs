@@ -25,7 +25,7 @@ cfg_if::cfg_if! {
 //const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 
-use crate::components::{CategoryList,About,TermsAndConditions};
+use crate::components::{CategoryList,About,TermsAndConditions,OrderCanceled,OrderCompleted};
 #[derive(Routable, PartialEq, Clone)]
 pub enum Route {
     #[layout(HeaderFooter)]
@@ -35,6 +35,13 @@ pub enum Route {
     CategoryList {},
     #[route("/produkter/:..segments")]
     ProductPage { segments: Vec<String> },
+
+    #[nest("/order")]
+        #[route("/avbruten/:uuid")]
+        OrderCanceled { uuid: String },
+        #[route("/klar/:uuid")]
+        OrderCompleted { uuid: String },
+    #[end_nest]
     #[route("/om")]
     About {},
     #[route("/användarvilkor")]
@@ -120,19 +127,56 @@ pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse
 }
 
 
+#[cfg(feature="server")]
+async fn order_middleware(
+    request: Request,
+    next: Next,
+) -> Response {
 
+    let path = request.uri().path();
+
+    if let Some(uuid) = path.strip_prefix(&(sjf_payment::SUCCESS_PATH.to_owned() + "/"))
+    {
+        let undo = db::checkout::commit_reservation(uuid.into()).await;
+        if let Err(e) = undo {
+            error!("Failed to commit order {} from link {}",uuid,e);
+        }
+    }
+    else if let Some(uuid) = path.strip_prefix(&(sjf_payment::CANCLE_PATH.to_owned()+"/"))
+    {
+        let undo = db::checkout::undo_reservation(uuid.into()).await;
+        if let Err(e) = undo {
+            error!("Failed to undo order {} from link {}",uuid,e);
+        }
+    }
+
+    let response = next.run(request).await;
+    response
+}
 
 
 #[cfg(feature="server")]
 async fn launch_server() {
-    // Connect to dioxus' logging infrastructure
-    //dioxus::logger::initialize_default();
-    dioxus::logger::init(dioxus::logger::tracing::Level::DEBUG).expect("failed to init logger");
+    let res = dotenvy::dotenv();
+
+    dioxus::logger::init(dioxus::logger::tracing::Level::INFO).expect("failed to init logger");
+
+    if let Ok(dot_env) = res 
+    {
+        info!("Loaded {}",dot_env.to_string_lossy());
+    }
     
     info!("Initializing db...");
     if  !db::init().await  
     {
        std::process::exit(1);
+    }
+
+    info!("Initializing stripe");
+    if let Err(e) = sjf_payment::init().await
+    {
+       error!("{}",e);
+       std::process::exit(2);
     }
     
     info!("Initializing object storage...");
@@ -164,7 +208,9 @@ async fn launch_server() {
     use dioxus::fullstack::prelude::DioxusRouterExt;
 
     let dioxus_router = axum::Router::new()
-        .serve_dioxus_application(ServeConfigBuilder::new(), App);
+        .serve_dioxus_application(ServeConfigBuilder::new(), App)
+        .layer(axum::middleware::from_fn(order_middleware))
+        ;
     let custom_router= axum::Router::new()
             .route("/kubernetes/probes/liveness", get(|| async { StatusCode::NO_CONTENT }   )  )
             .route("/images/:image_id}/:variant_id", get(handle_image_get));
@@ -200,7 +246,6 @@ fn ProductPage(segments: ReadOnlySignal<Vec<String>> ) -> Element {
 
     let error_msg = "Ooops här var det tomt, möjligen kan produkten plockats bort";
     let product = use_resource( {to_owned![segments];    move || {to_owned![segments]; async move {
-        info!("Getting product data!");
         get_category_and_product(segments().join("/")).await
     }}});
 

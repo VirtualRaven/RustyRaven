@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use sjf_api::checkout::CheckoutRequest;
-use sqlx::{query, query_as,query_file, Executor, Postgres};
+use sqlx::{query, query_as,query_file,query_file_as };
 use tracing::info;
 use crate::postgres::POOL;
 
@@ -63,8 +63,9 @@ pub async fn make_reservation(req: CheckoutRequest ) -> Result<String,CheckoutEr
 
 pub(crate) async fn undo_old_reservations() -> Result<(),CheckoutError>
 {
-    let mut expired_transactions = query!("DELETE FROM pending_orders where timestamp  < now() - interval '10min' RETURNING id")
+    let mut expired_transactions = query!("SELECT id FROM pending_orders where timestamp  < now() - interval '35min'")
     .fetch(POOL.get().unwrap());
+
 
     use futures_util::TryStreamExt;
     while let Some(r) = expired_transactions.try_next().await?
@@ -73,9 +74,45 @@ pub(crate) async fn undo_old_reservations() -> Result<(),CheckoutError>
     }
 
     Ok(())
+}
 
+pub struct OrderItem 
+{
+    pub product_id: u32,
+    pub image_path: Option<String>,
+    pub name: String,
+    pub price: u32,
+    pub ordered_quantity: u32,
+    pub tax_rate: u32
+}
 
-    
+pub async fn get_order(uuid: &str) -> Result<Vec<OrderItem>,CheckoutError> 
+{
+    let uuid = sqlx::types::Uuid::from_str(uuid)?;
+
+    let items= query_file!("sql/checkout.sql",uuid)
+    .fetch_all(POOL.get().unwrap())
+    .await?;
+
+    let res = items.into_iter().map(|i| {
+        OrderItem {
+            product_id: i.product_id as u32,
+            image_path: {
+                match (i.image_id, i.image_variant_id)
+                {
+                    (Some(id),Some(variant)) => Some(format!("/images/{}/{}",id,variant)),
+                    _ => None
+                }
+            },
+            name: i.name,
+            price: i.price as u32,
+            ordered_quantity: i.ordered_quantity as u32,
+            tax_rate: i.tax_rate as u32
+        }
+    } ).collect();
+
+    Ok(res)
+
 }
 
 pub async fn undo_reservation(uuid: String ) -> Result<(),CheckoutError>
@@ -89,11 +126,11 @@ pub async fn undo_reservation(uuid: String ) -> Result<(),CheckoutError>
     struct T {
         product_id: i32,
         quantity: i32
-    };
+    }
 
 
     {
-        let mut reservations = query_as!(T,"DELETE FROM product_reservations WHERE (reservation_id=$1) RETURNING product_id,quantity",uuid)
+        let reservations = query_as!(T,"DELETE FROM product_reservations WHERE (reservation_id=$1) RETURNING product_id,quantity",uuid)
         .fetch_all(&mut *tx).await?;
 
 
@@ -107,7 +144,26 @@ pub async fn undo_reservation(uuid: String ) -> Result<(),CheckoutError>
     }
 
     query!("DELETE FROM pending_orders WHERE id=$1",uuid)
-    .execute(&mut *tx);
+    .execute(&mut *tx).await?;
+
+    tx.commit().await?;
+    Ok(())
+
+}   
+
+pub async fn commit_reservation(uuid: String ) -> Result<(),CheckoutError>
+{
+
+    info!("Commiting reservation {}", uuid);
+
+    let uuid = sqlx::types::Uuid::from_str(uuid.as_ref())?;
+    let mut tx = crate::postgres::POOL.get().unwrap().begin().await?;
+
+    query!("DELETE FROM product_reservations WHERE (reservation_id=$1)",uuid)
+    .execute (&mut *tx).await?;
+
+    query!("DELETE FROM pending_orders WHERE id=$1",uuid)
+    .execute(&mut *tx).await?;
 
     tx.commit().await?;
     Ok(())

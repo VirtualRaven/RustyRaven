@@ -180,6 +180,7 @@ fn ProductCategories() -> Element
 pub fn FrontPage() -> Element 
 {
     rsx! {
+        document::Title { "SJF Concept" }
         div {
             class: "front_page",
             Latest {  }

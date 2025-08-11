@@ -1,10 +1,8 @@
-use std::collections::HashSet;
 
 use chrono::{DateTime, Utc};
-use tracing::{info, warn};
 use serde::{Deserialize, Serialize};
-use sjf_api::{category, product::{GetPreviewsRequest, GetPreviewsResp, Preview,Product as ApiProduct,GetProductRequest,GetProductResponse}};
-use sqlx::{database, postgres::{PgHasArrayType, PgPoolOptions},query, query_file, query_file_as, Pool, Postgres};
+use sjf_api::{ product::{GetPreviewsRequest, GetPreviewsResp, Preview,Product as ApiProduct,GetProductRequest,GetProductResponse}};
+use sqlx::{ query, query_file, query_file_as };
 use crate::postgres::POOL;
 
 
@@ -95,7 +93,7 @@ pub async fn update_product(product: Product ) -> Result<(), sqlx::Error>
 
 
 
-    let query = query_file!("sql/update_product.sql",
+    query_file!("sql/update_product.sql",
     product.name,
     product.price,
     product.description,
@@ -151,7 +149,7 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp,sql
         name: Option<String>,
         images: Option<Vec<ImageInfo>>,
         names: Option<Vec<String>>,
-    };
+    }
 
     let q = query_file_as!(T,"sql/get_previews.sql",&categories,req.limit as i32 )
     .fetch_all(POOL.get().unwrap())
@@ -200,7 +198,7 @@ pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sq
         images: Option<Vec<ImageInfo>>,
         names: Option<Vec<String>>,
         category: Option<i32>,
-    };
+    }
 
     let t = query_file_as!(T,"sql/get_product.sql", req.product_id as i32 )
     .fetch_one(POOL.get().unwrap())

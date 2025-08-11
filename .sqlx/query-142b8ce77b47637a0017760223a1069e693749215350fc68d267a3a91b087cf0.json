@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE products  SET  quantity=(quantity-$1) WHERE (quantity IS NOT NULL and id=$2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "142b8ce77b47637a0017760223a1069e693749215350fc68d267a3a91b087cf0"
+}

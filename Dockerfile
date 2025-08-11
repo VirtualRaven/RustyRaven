@@ -7,6 +7,7 @@ COPY Cargo.lock Cargo.toml builddir/
 COPY api/ builddir/api/
 COPY db/ builddir/db/
 COPY image/ builddir/image/
+COPY payment/ builddir/payment/
 COPY .cargo/ builddir/.cargo/
 COPY .sqlx/ builddir/.sqlx/
 COPY web/ builddir/web/

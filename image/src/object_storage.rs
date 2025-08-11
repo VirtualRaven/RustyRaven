@@ -41,10 +41,10 @@ pub async fn init_bucket() -> Result<(),ObjectStorageError>
 {
         use aws_sdk_s3::config::Credentials;
         use aws_sdk_s3::config::Region;
-        let key_id = std::env::var("S3_ACCESS_KEY_ID").expect("Environment variable S3_ACCESS_KEY_ID is required");
-        let secret_key = std::env::var("S3_SECRET_ACCESS_KEY").expect("Environment variable S#_SECRET_ACCESS_KEY is required");
+        let key_id = dotenvy::var("S3_ACCESS_KEY_ID").expect("Environment variable S3_ACCESS_KEY_ID is required");
+        let secret_key = dotenvy::var("S3_SECRET_ACCESS_KEY").expect("Environment variable S#_SECRET_ACCESS_KEY is required");
         let cred = Credentials::new(&key_id, &secret_key, None, None, "loaded-from-custom-env");
-        let endpoint = std::env::var("OBJECT_STORAGE_URI").expect("Environment variable OBJECT_STORAGE_URI required").to_owned();
+        let endpoint = dotenvy::var("OBJECT_STORAGE_URI").expect("Environment variable OBJECT_STORAGE_URI required").to_owned();
         let s3_config = aws_sdk_s3::config::Builder::new()
             .endpoint_url(endpoint)
             .credentials_provider(cred)

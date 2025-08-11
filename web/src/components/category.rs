@@ -17,7 +17,7 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
     
     rsx! 
     {
-        document::Title { "{category_path.last().unwrap() }" }
+        document::Title { "SJF Concept - {category_path.last().unwrap() }" }
         crate::components::CategoryBar { path: category_path }
 
 

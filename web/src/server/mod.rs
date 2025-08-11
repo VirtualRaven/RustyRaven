@@ -5,7 +5,7 @@ use dioxus::prelude::server_fn::error::NoCustomError;
 use dioxus::prelude::server_fn::ServerFn;
 use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
-use dioxus::logger::tracing::{info, warn};
+use dioxus::logger::tracing::{info, warn,error};
 use sjf_api::checkout::CheckoutRequest;
 #[cfg(feature="server")]
 use sjf_db as db;
@@ -209,7 +209,6 @@ use sjf_api::product::{GetPreviewsRequest, GetPreviewsResp};
 #[server(endpoint="get/previews",input=dioxus::prelude::server_fn::codec::GetUrl)]
 pub async fn get_previews( p: Option<u32>, r: bool, limit: u32) -> Result<GetPreviewsResp,ServerFnError>
 {
-    warn!("get_previews: {:#?}",p);
     let r = GetPreviewsRequest {
         recursive: r,
         category: p,
@@ -326,9 +325,18 @@ pub async fn checkout(req: CheckoutRequest ) -> Result<String ,ServerFnError>
         Err(e) => {
             info!("Checkout failed {}",e);
             Err(ServerFnError::ServerError("Product reservation failure".into()))
+
         },
-        Ok(_) => {
-            Ok(String::from(""))
+        Ok(uuid) => {
+
+            match sjf_payment::checkout(uuid).await
+            {
+                Err(e) => {
+                    error!("Checkout failed {}",e);
+                    Err(ServerFnError::ServerError("Failed to create checkout session".into()))
+                },
+                Ok(s) => Ok(s)
+            }
         }
     }
 } 

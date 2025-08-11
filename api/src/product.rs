@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::category;
 
 pub const PRODUCTS_PATH: &str = "/produkter";
 pub const ARTICLE_PREFIX: &str = "artikel-";

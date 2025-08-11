@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Active: 1754908662837@@127.0.0.1@5432@sjf\r\nCREATE TABLE IF NOT EXISTS pending_orders(\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    timestamp timestamp with time zone NOT NULL DEFAULT (current_timestamp AT TIME ZONE 'UTC')\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "011fe1c4c468371f6210aab3a0b21884e3b40b496483bfeb538edda89c78f605"
+}

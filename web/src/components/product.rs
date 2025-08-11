@@ -113,7 +113,7 @@ pub fn Product(product: ReadOnlySignal<sjf_api::product::Product>) -> Element {
     
     rsx! 
     {
-        document::Title { "{product().name}" }
+        document::Title { "SJF Concept - {product().name}" }
         crate::components::CategoryBar { path: product().category_name }
 
 

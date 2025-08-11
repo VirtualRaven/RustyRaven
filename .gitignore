@@ -7,3 +7,7 @@
 **/*.rs.bk
 web/target
 target/
+
+kubernetes/cert-manager/
+secret.yaml
+.env

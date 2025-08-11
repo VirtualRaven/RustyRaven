@@ -36,7 +36,13 @@ impl CartState {
     pub async fn checkout(&self) -> Result<String,ServerFnError>
     {
         let req  = CheckoutRequest { order: self.contents.clone().into_iter().map(|(id,(_,quantity))| { (id,quantity) }).collect() };
-        crate::server::checkout(req).await
+        let res = crate::server::checkout(req).await;
+        if let Ok(payment_url) = &res 
+        {
+             let nav = navigator();
+             nav.push( NavigationTarget::<crate::Route>::External(payment_url.clone()) );
+        }
+        res
     }
 
     pub fn add_item(&mut self, product: Product)
@@ -51,6 +57,11 @@ impl CartState {
         }
         self.open = MenuState::Opened;
     } 
+
+    pub fn clear(&mut self)
+    {
+        self.contents.clear();
+    }
 
     fn inc(&mut self, id: &ProductId)
     {

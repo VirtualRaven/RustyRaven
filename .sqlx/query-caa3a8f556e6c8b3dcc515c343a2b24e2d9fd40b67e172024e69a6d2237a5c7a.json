@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE TABLE IF NOT EXISTS product_reservations(\r\n    reservation_id UUID NOT NULL,\r\n    product_id integer NOT NULL,\r\n    quantity integer NOT NULL,\r\n    CONSTRAINT reservation_id_fkey FOREIGN key(reservation_id) REFERENCES pending_orders(id),\r\n    CONSTRAINT product_id_fkey FOREIGN key(product_id) REFERENCES products(id),\r\n    CONSTRAINT positive_quantity CHECK (quantity > 0)\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "caa3a8f556e6c8b3dcc515c343a2b24e2d9fd40b67e172024e69a6d2237a5c7a"
+}

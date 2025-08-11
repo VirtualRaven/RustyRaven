@@ -9,13 +9,6 @@ pub use postgres::image as image;
 pub use sqlx::Error as Error;
 use tracing::{info,error};
 
-pub struct DbSettings {
-    db_user: String,
-    db_address: String,
-    db_name: String,
-    db_password: String
-}
-
 pub async fn init() -> bool
 {
 

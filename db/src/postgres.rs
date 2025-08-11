@@ -1,9 +1,5 @@
-use std::collections::HashSet;
 
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use sjf_api::category;
-use sqlx::{database, postgres::{PgHasArrayType, PgPoolOptions},query, query_file, query_file_as, Pool, Postgres};
+use sqlx::{ postgres::{ PgPoolOptions}, query_file, query_file_as, Pool, Postgres};
 use once_cell::sync::OnceCell;
 
 pub (crate) static POOL: OnceCell<Pool<Postgres>> = OnceCell::new();
@@ -11,14 +7,14 @@ pub (crate) static POOL: OnceCell<Pool<Postgres>> = OnceCell::new();
 pub async fn init() -> Result<(),sqlx::Error>
 {
 
-    let url = std::env::var("DATABASE_URL").unwrap_or_else( |_| {
-        let user = std::env::var("POSTGRES_USER")
+    let url = dotenvy::var("DATABASE_URL").unwrap_or_else( |_| {
+        let user = dotenvy::var("POSTGRES_USER")
         .expect("POSTGRES_USER environment variable has to be set. ");
-        let address =  std::env::var("POSTGRES_ADDRESS")
+        let address =  dotenvy::var("POSTGRES_ADDRESS")
         .expect("POSTGRES_ADDRESS environment variable has to be set. ");
-        let database =  std::env::var("POSTGRES_DB_NAME")
+        let database =  dotenvy::var("POSTGRES_DB_NAME")
         .expect("POSTGRES_DB_NAME environment variable has to be set. ");
-        let password =  std::env::var("POSTGRES_PASSWORD")
+        let password =  dotenvy::var("POSTGRES_PASSWORD")
         .expect("POSTGRES_PASSWORD environment variable has to be set. ");
         format!("postgres://{user}:{password}@{address}/{database}")
     });
@@ -61,7 +57,7 @@ pub mod image {
     use std::collections::BTreeMap;
 
     use tracing::error;
-    use sqlx::{query, query_as, Executor};
+    use sqlx::{query,  Executor};
 
     use super::*;
 pub struct ImageInsertVariant {
@@ -124,7 +120,7 @@ pub async fn get_image_variants(image_id: u32) -> Result<Vec<u32>,sqlx::Error>
 pub async fn update_image_view<'c,E>( e : E, create: bool  ) -> Result<(),sqlx::Error> 
 where E: Copy + Executor<'c, Database = Postgres>,
 {
-    if (create)
+    if create
     {
         query_file!("sql/materialized_image_view.sql").execute(e).await?;
         query!("CREATE UNIQUE INDEX IF NOT EXISTS product_image_info_index  on product_image_info (product_id)").execute(e).await?;
