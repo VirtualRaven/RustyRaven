@@ -13,6 +13,8 @@ pub use u32 as ProductQuantity;
 
 fn cart_name() -> String { format!("cart-{}-{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION_MAJOR") ) }
 
+
+#[derive(PartialEq)]
 pub struct CartState {
     open: MenuState,
     contents: BTreeMap<ProductId, (Product , ProductQuantity) >
@@ -51,7 +53,6 @@ impl CartState {
         
         Self::get_storage().map(|s|
             {
-                info!("Saving 3");
                 let _ = s.set_item(&cart_name(), &serde_json::to_string(&state)?);
                 Ok::<(),serde_json::Error >(())
             }
@@ -311,11 +312,12 @@ pub fn CheckoutButton()-> Element
         Idle,
         Pending,
         Error(ServerFnError),
+        Changed,
         Accepted
     }
 
     let mut state = use_signal(|| CheckoutState::Idle );
-    let cart_state = use_cart();
+    let mut cart_state = use_cart();
 
     let is_empty = use_memo(move || {
         cart_state.read().is_empty()
@@ -327,13 +329,17 @@ pub fn CheckoutButton()-> Element
 
     let current_state = &*state.read();
     match current_state {
-        Idle => rsx!{
+        Changed | Idle => rsx!{
 
             if is_empty()
             {
                 div {
                     class: "checkout disabled",
-                    "Till kassa"
+                    match current_state
+                    {
+                        Changed => "Varukorgen har uppdaterats",
+                        _ => "Till kassa"
+                    }
                 }
 
             }
@@ -343,10 +349,21 @@ pub fn CheckoutButton()-> Element
                     onclick: move |_| async move {
 
                         state.set(Pending);
-                        let cart_state = &*cart_state.read();
-                        match cart_state.checkout().await
+                        let cart = &*cart_state.read();
+                        match cart.checkout().await
                         {
                             Err(e) => {
+                                spawn ( async move {
+                                    if let Some(mut c) = CartState::load().await
+                                    {
+                                        if cart_state.read().contents != c.contents
+                                        {
+                                            c.open = MenuState::Opened;
+                                            cart_state.set(c);
+                                            state.set(CheckoutState::Changed);
+                                        }
+                                    }
+                                });
                                 state.set(Error(e))
                             },
                             Ok(_) => {
@@ -354,7 +371,11 @@ pub fn CheckoutButton()-> Element
                             }
                         }
                     },
-                    "Till kassa"
+                    match current_state
+                    {
+                        Changed => "Varukorgen har uppdaterats",
+                        _ => "Till kassa"
+                    }
                 }
             }
 

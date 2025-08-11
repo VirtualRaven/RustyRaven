@@ -1,4 +1,5 @@
 
+#[derive(PartialEq)]
 enum MenuState 
 {
     Closed,
