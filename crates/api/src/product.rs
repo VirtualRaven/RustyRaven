@@ -110,3 +110,11 @@ pub struct  GetProductRequest
 }
 
 pub type GetProductResponse = Product;
+
+#[derive(Debug,Serialize,Deserialize,Clone,PartialEq)]
+pub struct  GetProductsRequest 
+{
+    pub product_ids: Vec<u32>,
+}
+
+pub type GetProductsResponse = Vec<Product>;

@@ -1,7 +1,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sjf_api::{ product::{GetPreviewsRequest, GetPreviewsResp, Preview,Product as ApiProduct,GetProductRequest,GetProductResponse}};
+use sjf_api::{ product::{GetPreviewsRequest, GetPreviewsResp, Preview,Product as ApiProduct,GetProductRequest,GetProductResponse,GetProductsRequest,GetProductsResponse}};
 use sqlx::{ query, query_file, query_file_as };
 use crate::postgres::POOL;
 
@@ -186,27 +186,24 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp,sql
 
 }
 
-pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sqlx::Error>
-{   
+
+struct SqlProduct {
+    id: Option<i32>,
+    price: Option<i32>,
+    quantity: Option<i32>,
+    description: Option<String>,
+    name: Option<String>,
+    images: Option<Vec<ImageInfo>>,
+    names: Option<Vec<String>>,
+    category: Option<i32>,
+}
     
-    struct  T {
-        id: Option<i32>,
-        price: Option<i32>,
-        quantity: Option<i32>,
-        description: Option<String>,
-        name: Option<String>,
-        images: Option<Vec<ImageInfo>>,
-        names: Option<Vec<String>>,
-        category: Option<i32>,
-    }
 
-    let t = query_file_as!(T,"sql/get_product.sql", req.product_id as i32 )
-    .fetch_one(POOL.get().unwrap())
-    .await?;
+impl Into<ApiProduct> for SqlProduct {
 
-
-
-    let result = 
+    fn into(self) -> ApiProduct
+    {
+        let t = self;
         ApiProduct 
         {
             id: t.id.unwrap() as u32,
@@ -228,10 +225,34 @@ pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sq
                 }
             }).collect(),
             category_name: t.names.unwrap()
-        };
+        }
 
-    Ok(
-        result 
-    )
+    }
+
+}
+
+
+pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sqlx::Error>
+{   
+    
+
+    let t = query_file_as!(SqlProduct,"sql/get_product.sql", req.product_id as i32 )
+    .fetch_one(POOL.get().unwrap())
+    .await?;
+    
+    Ok(t.into())
+
+}
+
+pub async fn get_specified_products(req: GetProductsRequest) -> Result<GetProductsResponse,sqlx::Error>
+{   
+    
+
+    let ids: Vec<i32> = req.product_ids.into_iter().map(|x| x as i32).collect();
+    let t = query_file_as!(SqlProduct,"sql/get_specified_products.sql", &ids  )
+    .fetch_all(POOL.get().unwrap())
+    .await?;
+    
+    Ok(t.into_iter().map(|x|x.into()).collect())
 
 }

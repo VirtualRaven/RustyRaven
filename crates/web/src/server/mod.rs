@@ -227,6 +227,16 @@ pub async fn get_product( p: u32 ) -> Result<GetProductResponse,ServerFnError>
     error_logger( db::product::get_product(r).await)
 }
 
+use sjf_api::product::{GetProductsRequest, GetProductsResponse};
+#[server(endpoint="get/specified_products",input=dioxus::prelude::server_fn::codec::GetUrl)]
+pub async fn get_specified_products( p: Vec<u32> ) -> Result<GetProductsResponse,ServerFnError>
+{
+    let r = GetProductsRequest {
+        product_ids: p
+    };
+    error_logger( db::product::get_specified_products(r).await)
+}
+
 pub mod category {
     use super::*;
     use dioxus::prelude::server_fn::codec::Json;

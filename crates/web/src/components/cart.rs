@@ -2,6 +2,7 @@
 use std::collections::BTreeMap;
 
 use dioxus::prelude::{server_fn::ServerFn, *};
+use serde::Serialize;
 use crate::components::{MenuState};
 use sjf_api::{checkout::CheckoutRequest, product::{Product, ProductId}};
 
@@ -10,10 +11,13 @@ const CART_ICON: Asset = asset!("/assets/cart.png");
 pub use u32 as ProductQuantity;
 
 
+fn cart_name() -> String { format!("cart-{}-{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION_MAJOR") ) }
+
 pub struct CartState {
     open: MenuState,
     contents: BTreeMap<ProductId, (Product , ProductQuantity) >
 }
+
 
 impl CartState {
     
@@ -23,6 +27,106 @@ impl CartState {
             contents: Default::default()
         }
     }
+
+
+    #[cfg(feature="web")]
+    fn get_storage() -> Option<web_sys::Storage>
+    {
+        use web_sys::{window};
+        window()
+        .map(|w| w.local_storage().unwrap_or_default() )?
+    }
+
+    #[cfg(feature="web")]
+    pub fn save(&self) 
+    {
+        use dioxus::logger::tracing::info;
+        info!("Saving cart");
+        let state: BTreeMap<u32,u32> = self
+        .contents
+        .iter()
+        .map(|(k,(_,q))| (k.clone(),q.clone()) )
+        .collect();
+        
+        
+        Self::get_storage().map(|s|
+            {
+                info!("Saving 3");
+                let _ = s.set_item(&cart_name(), &serde_json::to_string(&state)?);
+                Ok::<(),serde_json::Error >(())
+            }
+        );
+    }
+    
+    #[cfg(feature="web")]
+    pub async fn load()-> Option<Self>
+    {
+        use dioxus::logger::tracing::info;
+
+
+        let unserialize =|| {
+            if let Some(storage) = Self::get_storage()
+            {
+
+                let data = storage.get_item(&cart_name());
+                if let Ok(Some(data)) = data 
+                {
+                    if let Ok(data)   = serde_json::from_str(&data) 
+                    {
+                        let data : BTreeMap<u32,u32> =data;
+                        return Some(data)
+                    }
+                }
+            }
+            return None
+        };
+
+
+        if let Some(data) =  unserialize()
+        {
+            if !data.is_empty()
+            {
+                let product_ids = data.keys().cloned().collect();
+                let rsp = crate::server::get_specified_products(product_ids).await;
+                if let Ok(ps) = rsp
+                {
+                    return Some(
+                        Self {
+                            contents: ps.into_iter().filter_map(|p| {
+                                use std::u32;
+ 
+                                let previous_quantity =data.get(&p.id).unwrap().clone();
+                                let max_quantity = p.stock.clone().unwrap_or(u32::MAX);
+                                let new_quantity = {
+                                    if previous_quantity > max_quantity
+                                    {
+                                        max_quantity
+                                    }
+                                    else  {previous_quantity}
+                                };
+
+                                if new_quantity > 0 
+                                {
+                                    Some((p.id.clone(), (p, new_quantity )  ) )
+                                }
+                                else {
+                                    None
+                                }
+
+                            })
+                            .collect(),
+                            open: MenuState::Closed
+                        }
+                    )
+                }
+
+            }
+        }
+        return None
+
+    } 
+
+
 
     pub fn has_item(&self, id: &ProductId) -> bool
     {
@@ -59,11 +163,13 @@ impl CartState {
             }
         }
         self.open = MenuState::Opened;
+        self.save();
     } 
 
     pub fn clear(&mut self)
     {
         self.contents.clear();
+        self.save();
     }
 
     fn inc(&mut self, id: &ProductId)
@@ -80,6 +186,7 @@ impl CartState {
             }
             None => {}
         }
+        self.save();
     }
     fn dec(&mut self, id: &ProductId)
     {
@@ -96,11 +203,9 @@ impl CartState {
         {
             self.open = MenuState::Closed;
         }
+        self.save();
     }
 
-    pub fn load() -> Self {
-        Self::new()
-    }
 
     fn num_items(&self) -> u32 
     {

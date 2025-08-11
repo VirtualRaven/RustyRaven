@@ -26,7 +26,7 @@ pub use header::*;
 mod footer;
 pub use footer::*;
 mod cart;
-pub use cart::{Cart,CartState,CartContents};
+pub use cart::{Cart,CartState,CartContents,use_cart};
 mod admin;
 pub use admin::product::list::ProductList;
 pub use admin::category::CategoryList;

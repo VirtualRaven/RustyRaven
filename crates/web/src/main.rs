@@ -25,7 +25,7 @@ cfg_if::cfg_if! {
 //const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 
-use crate::components::{CategoryList,About,TermsAndConditions,OrderCanceled,OrderCompleted};
+use crate::components::{About, CartState, CategoryList, OrderCanceled, OrderCompleted, TermsAndConditions};
 #[derive(Routable, PartialEq, Clone)]
 pub enum Route {
     #[layout(HeaderFooter)]
@@ -53,7 +53,22 @@ pub enum Route {
 #[component]
 fn HeaderFooter() -> Element {
     use_context_provider(|| Signal::new(None::<sjf_api::category::GetChildrenRsp>) );
-    use_context_provider(|| Signal::new( components::CartState::load() ));
+    use_context_provider(|| Signal::new( components::CartState::new() ));
+
+
+    let mut cart_state = components::use_cart();
+
+
+    info!("Header");
+    let _ = use_resource(move || async move {
+        info!("Header resource");
+        if let Some(c) = CartState::load().await
+        {
+            cart_state.set(c);
+        }
+    });
+
+
     rsx! {
         document::Link{
             rel: "preconnect",

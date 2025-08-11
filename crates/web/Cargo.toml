@@ -22,9 +22,11 @@ rand = "0.9.1"
 getrandom = { version = "0.3.3", features = ["wasm_js"] }
 urlencoding = {workspace=true, optional=true}
 dotenvy = {workspace=true, optional=true}
+web-sys = { version = "0.3.77", features = ["Window", "Storage"], optional=true }
+serde_json = {version="1.0.142", optional=true}
 
 [features]
 default = ["web"]
 # The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
-web = ["dioxus/web"]
+web = ["dioxus/web", "dep:web-sys", "dep:serde_json"]
 server = ["dioxus/server", "dep:dotenvy" , "dep:urlencoding", "dep:sjf_payment",  "dep:sjf_db","dep:futures", "dep:sjf_image", "dep:pretty_env_logger", "dep:tokio","dep:axum"]
