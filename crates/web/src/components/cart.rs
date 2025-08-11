@@ -32,6 +32,9 @@ impl CartState {
     {
         self.contents.is_empty()
     }
+    pub fn close(&mut self) {
+        self.open = MenuState::Closed;
+    }
 
     pub async fn checkout(&self) -> Result<String,ServerFnError>
     {

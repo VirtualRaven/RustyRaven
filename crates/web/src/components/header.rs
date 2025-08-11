@@ -65,13 +65,22 @@ pub fn Header() -> Element {
 
 
     let mut menu_state = use_signal(|| MenuState::Closed);
+    let mut cart_state = crate::components::cart::use_cart();
 
 
 
     let menu_class =  use_memo( move ||  {
         match *menu_state.read() {
-        MenuState::Opened => "menu-open",
-        _ => ""
+        MenuState::Opened =>{
+           cart_state.with_mut(|c|
+                {c.close();}
+            );
+            "menu-open"
+        },
+        
+        _ => {
+            ""
+        }
         }
     });
 
@@ -99,6 +108,9 @@ pub fn Header() -> Element {
                 components::Cart {}
             },
             ul {  
+                onclick: move |_| {
+                    menu_state.with_mut(|state| {*state= MenuState::Closed });
+                },
                 class: "menu {menu_class}",
                 li { 
                     Link {to: crate::Route::FrontPage {}, "Hem" }
