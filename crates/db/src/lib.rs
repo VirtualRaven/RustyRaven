@@ -21,13 +21,13 @@ pub async fn init() -> bool
     tokio::task::spawn(async {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(10*60));
         loop {
+            interval.tick().await;
             info!("Removing stale reservations");
             match checkout::undo_old_reservations().await
             {
                 Err(e) => error!("Periodic reservation cleanup failed with error {}",e),
                 _ => ()
             }
-            interval.tick().await;
         }
     });
 
