@@ -140,6 +140,11 @@ pub async fn get_product_images(req: AuthenticatedRequest<u32> ) -> Result<BTree
     }
 
 }
+#[server(endpoint="auth/product/delete", input=Json)]
+pub async fn delete_product(req: AuthenticatedRequest<u32>) -> Result<(),ServerFnError>
+{
+    error_logger(db::product::delete(req.data).await)
+}
 
 #[server(endpoint="auth/product/store", input=Json)]
 pub async fn store_product(req: AuthenticatedRequest<Product> ) -> Result<i32,ServerFnError> 

@@ -9,6 +9,7 @@ use dioxus::prelude::*;
 use dioxus::logger::tracing::{info, warn};
 
 use crate::components::ImageUploadButton;
+use crate::server::category::Delete;
 use crate::{components, server};
 use crate::server::{AuthenticatedRequest, Product};
 
@@ -91,6 +92,121 @@ pub fn SaveButton( product : Signal<Product>, update_counter: Signal<u32>, categ
                         }
                     }
                 });
+            },
+            {button_text}
+        }
+    }
+
+}
+
+#[component]
+pub fn DeleteButton( product : Signal<Product>, update_counter: Signal<u32>, category: ReadOnlySignal<u32> ) -> Element {
+
+    #[derive(Clone,PartialEq)]
+    enum State {
+        Idle,
+        Confirm,
+        Deleting,
+        Deleted(u32),
+        Error(u32)
+    }
+
+
+    let mut delete_state = use_signal(|| State::Idle);
+    let is_created = use_memo(move || product.read().id.is_some() );
+    
+
+
+
+    let button_text = use_memo(move || {
+        match *delete_state.read()
+        {
+            State::Idle => "Ta bort",
+            State::Confirm => "Bekräfta borttagning",
+            State::Deleting => "Tar Bort...",
+            State::Deleted(_) => "Bort tagen",
+            State::Error(_) => "Sparning misslyckades"
+        }
+    } );
+
+    let changed_since_saved = use_memo( move || {
+         let current_id = product.read().id.unwrap_or_default() as u32;
+         match  *delete_state.read() 
+         {
+             State::Deleted(ref deleted_id) => *deleted_id != current_id,
+             State::Error(ref failed_id)=> *failed_id != current_id,
+             _ => false
+         }
+    });
+
+    //Reset internal state if product changes
+    use_effect( move ||  {
+        if *changed_since_saved.read() {
+            delete_state.set(State::Idle);
+        }
+    });
+
+
+    let button_class = match *delete_state.read()
+    {
+        State::Error(_) => "red",
+        _ => "red"
+    };
+
+    rsx! {
+        button {
+            disabled: !is_created(),
+            class: "{button_class}",
+            onclick: move |_|  async move  {  
+                    use crate::server::*;
+
+
+                    let state : State = (*delete_state.read()).clone();
+                    match state
+                    {
+                        State::Idle => {
+                            delete_state.set(State::Confirm);
+                            spawn(
+                                async move {
+                                    wasmtimer::tokio::sleep(std::time::Duration::from_secs(2)).await;
+                                    if *delete_state.read() == State::Confirm
+                                    {   
+                                        delete_state.set(State::Idle);
+                                    }
+                                }
+                            );
+                        },
+
+                        _ => {
+
+                            let id = product.read().id.clone();
+                            if let Some(id) = id
+                            {
+                                let id = id as u32;
+                                delete_state.set(State::Deleting);
+                                let rsp = crate::server::delete_product (
+                                    AuthenticatedRequest {
+                                        data: id
+                                    }
+                                ).await;
+
+                                match rsp {
+                                    Ok(()) => {
+                                        delete_state.set(State::Deleted(id) );
+                                        product.set(Product::new(category.read().clone()));
+                                        update_counter.with_mut(|c| {(*c)+=1;} );
+                                    },
+                                    Err(e) => {
+                                        delete_state.set(State::Error(id));
+                                        warn!("Failed to delete product {:#?}", e);
+                                    }
+                                }
+
+                            }
+
+                        }
+                    }
+
             },
             {button_text}
         }
@@ -364,11 +480,7 @@ fn FormFields(props: FormFieldProps) -> Element {
             ProductDescription {product}
             div {
                 class: "flex-start-container button-row",
-                button {
-                    disabled: product.read().id.is_none(),
-                    class: "red",
-                    "Ta bort!"
-                }, 
+                DeleteButton  {  product: product, update_counter: props.update_counter, category: props.category }
                 button {
                     disabled: product.read().id.is_none(),
                     onclick: move |_| {

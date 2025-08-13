@@ -69,6 +69,7 @@ button {
     border: 0.2rem solid defines.$mainbright;
     color: defines.$mainbright;
     background: none;
+    cursor: pointer;
 
     padding:1rem;
     border-radius: 0.5rem;
@@ -76,6 +77,8 @@ button {
     &:disabled {
         color: #efefef !important;
         border-color: #efefef !important;
+        opacity: 0.1;
+        cursor: not-allowed;
     }
 }
 

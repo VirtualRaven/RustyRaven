@@ -246,13 +246,24 @@ pub async fn get_product(req: GetProductRequest) -> Result<GetProductResponse,sq
 
 pub async fn get_specified_products(req: GetProductsRequest) -> Result<GetProductsResponse,sqlx::Error>
 {   
-    
-
     let ids: Vec<i32> = req.product_ids.into_iter().map(|x| x as i32).collect();
     let t = query_file_as!(SqlProduct,"sql/get_specified_products.sql", &ids  )
     .fetch_all(POOL.get().unwrap())
     .await?;
-    
     Ok(t.into_iter().map(|x|x.into()).collect())
+
+}
+pub async fn delete(id: u32 ) -> Result<(), sqlx::Error>
+{
+    let id = id as i32;
+    let mut tx = POOL.get().unwrap().begin().await?;
+    query!("DELETE from product_images where product_id=$1",id).execute(&mut *tx).await?;
+    query!("DELETE from products where id=$1",id).execute(&mut *tx).await?;
+    
+    crate::image::update_image_view_later();
+
+    tx.commit().await?;
+
+    Ok(())
 
 }
