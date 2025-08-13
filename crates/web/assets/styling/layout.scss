@@ -1,0 +1,140 @@
+@use 'defines';
+
+header {
+    position: sticky;
+    top:0;
+    background-color: defines.$coolors1;
+    border-left: 10px solid defines.$mainbright;
+    color: white;
+
+    > div.header-content {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    nav, h2 { display: inline-block;}
+    nav {
+        $barheight: 0.25rem;
+        height: 2rem;
+        position: relative;
+        cursor: pointer;
+
+        > div {
+            top:0;
+            width: 2.5rem;
+            height: $barheight;
+            border-radius: 0.1rem;
+            //background-color: defines.$coolors3;
+            background-image:  linear-gradient(10deg,#7f7f81,#edf0f3,#7f8183);
+            transition: all 0.2s ease-in-out;
+            transform: rotate(0deg);
+            &:nth-child(3n+2) {
+                transform: translateY( calc(3 * $barheight - $barheight)   );
+            }
+            &:nth-child(3n) {
+                transform: translateY( calc(6 * $barheight - 2 * $barheight) );
+            }
+        }
+        
+        &:hover {
+            > div {
+                background-color: #e0e0e0;
+                $inset: 0.2rem;
+                &:nth-child(3n+1) {
+                    transform: translateY( -$inset   );
+                }
+                &:nth-child(3n) {
+                    transform: translateY( calc(6 * $barheight - 2 * $barheight + $inset) );
+                }
+            }
+        }
+    }
+    h2 {
+        margin:0;
+        margin-left:1rem;
+        font-size: xx-large;
+    }
+    ul {
+        list-style-type: none;
+
+    }
+    ul.menu {
+        border-left: 10px solid defines.$mainbright;
+        left: -10px;
+
+
+        position: absolute;
+        border-bottom-right-radius: 2rem;
+        margin:0;
+        background-color: defines.$coolors1;
+        color: white;
+        transform: scaleY(0);
+        transform-origin: top;
+        transition: transform 0.2s ease;
+        border-top: 2px solid defines.$mainbright;
+        padding: 3rem;
+        max-height: 60vh;
+        overflow-y: scroll;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+    }
+    li {
+        font-size: x-large;
+        font-weight: 600;
+        padding:1rem;
+        
+        border-bottom: 2px solid defines.$mainbright;
+    }
+    a {
+        text-decoration: none;
+        background-image:  linear-gradient(45deg,#7f7f81,#edf0f3,#7f8183);
+        color: transparent;
+        background-clip: text; 
+    }
+    img.logo {
+        height: 40px;
+        max-width: 40vw;
+        padding:0;
+        margin-left:2rem;
+        margin-right:1rem;
+    }
+}
+ 
+
+.cart {
+    display: inline-block;
+    margin-left: auto;
+    padding:1rem;
+    > img {
+        height:40px
+    }
+}
+
+
+.menu-open {
+    transform: scaleY(1) !important;
+}
+
+footer {
+    background-color: defines.$coolors1;
+    border-top: 10px solid defines.$mainbright;
+    padding:2rem;
+    display: flex;
+
+    justify-content: flex-start;
+    ul, li {
+        display: inline-block;
+        font-size:larger;
+         background-image:  linear-gradient(45deg,#7f7f81,#edf0f3,#7f8183);
+        color: transparent;
+        background-clip: text; 
+    }
+    li { margin-right: 1rem;}
+    a {
+        text-decoration: none;
+    }
+    > img {
+        width: calc( min( 250px, 30vw) );
+        margin-left: auto;
+    }
+}
