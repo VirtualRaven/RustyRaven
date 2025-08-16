@@ -1,4 +1,4 @@
-use dioxus::{logger::tracing::info, prelude::*};
+use dioxus::{prelude::*};
 
 #[component]
 pub fn About() -> Element 

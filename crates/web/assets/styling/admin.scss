@@ -351,3 +351,62 @@ tr {
         border-left: 0.5rem solid defines.$mainbright;
     }
 }
+
+.login {
+    display: inline-block;
+    margin-left: auto;
+    margin-right: auto;
+
+    & > div:first-child
+    {
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+        color:white;
+        padding:1rem;
+        background-color: defines.$coolors1;
+        h2 {
+            background-image: linear-gradient(30deg,#edf0f3,#7f8183);
+            background-clip: text;
+            padding: 0;
+            color:transparent;
+            margin:0;
+        }
+        border-bottom: solid 5px defines.$mainbright;
+    }
+    & > div:nth-child(2), & > div:nth-child(3)
+    {
+        padding:2rem;
+        button {
+            margin:0.5rem;
+        }
+        color: white;
+        background-color: defines.$coolors1;
+    }
+    & > div:nth-child(3)
+    {
+        border-bottom-left-radius: 1rem;
+        border-bottom-right-radius: 1rem;
+    }
+    label {
+        display: block;
+        margin-right: 1rem;
+    }
+
+    input[type=text]{
+        border:none;
+        background-color: defines.$mainbright;
+        color:white;
+        padding:1rem;
+        outline:0;
+        font-size: larger;
+        font-family: 'Courier New', Courier, monospace;
+        &:hover 
+        {
+            border:none;
+        }
+        &:focus {
+            outline: none !important;
+            border: none;
+        }
+    }
+}

@@ -205,7 +205,7 @@ fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>
 
 }
 
-const ADMIN_CSS: Asset = asset!("/assets/styling/admin.scss");
+pub const ADMIN_CSS: Asset = asset!("/assets/styling/admin.scss");
 
 
 
@@ -218,27 +218,40 @@ pub fn CategoryList() -> Element {
 
 
     let loaded_categories = use_resource(move || async move {
-        match server::category::get_children(None).await
+
+        match crate::server::auth::is_authenticated().await
         {
-            Ok(rsp) => {
-                categories
-                .write()
-                .extend(
-                    rsp.children
-                    .into_iter()
-                    .map(
-                        |(id,name)| Category {
-                            id,name, depth: 0, parent: None 
-                        }  
-                    )
-                );
-                Ok(())
+            Ok(true) => {
+                match server::category::get_children(None).await
+                {
+                    Ok(rsp) => {
+                        categories
+                        .write()
+                        .extend(
+                            rsp.children
+                            .into_iter()
+                            .map(
+                                |(id,name)| Category {
+                                    id,name, depth: 0, parent: None 
+                                }  
+                            )
+                        );
+                        Ok(())
+                    }
+                    Err(_) => {
+                        warn!("Failed to load children!");
+                        Err(())
+                    }
+                }
             }
-            Err(_) => {
-                warn!("Failed to load children!");
+            Ok(false) | Err(_) => {
+                let nav = navigator();
+                nav.push( NavigationTarget::<crate::Route>::Internal(crate::Route::Auth {}) );
                 Err(())
             }
         }
+
+
     });
 
 

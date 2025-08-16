@@ -4,6 +4,7 @@ mod postgres;
 pub mod category;
 pub mod product;
 pub mod checkout;
+pub mod auth;
 pub use product::*;
 pub use postgres::image as image;
 pub use sqlx::Error as Error;

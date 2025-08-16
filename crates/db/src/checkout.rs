@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use sjf_api::checkout::CheckoutRequest;
-use sqlx::{query, query_as,query_file,query_file_as };
+use sqlx::{query, query_as,query_file};
 use tracing::info;
 use crate::postgres::POOL;
 

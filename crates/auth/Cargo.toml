@@ -1,0 +1,21 @@
+[package]
+name = "sjf_auth"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum-login = {workspace=true}
+axum = {workspace=true}
+tokio = {workspace=true}
+tower-sessions={version="0.13.0",default-features = false, features = [
+  "signed", "memory-store"
+]}
+time = {version="0.3.41"}
+webauthn-rs = {version="0.5.2",features = [
+    "danger-allow-state-serialisation",
+]} 
+thiserror={workspace=true}
+tracing = {workspace = true }
+minicbor-serde ={version= "0.5.0", features=["std"]}
+sjf_db = {path="../db"}
+dotenvy = {workspace=true}

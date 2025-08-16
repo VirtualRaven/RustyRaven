@@ -25,7 +25,7 @@ cfg_if::cfg_if! {
 //const FAVICON: Asset = asset!("/assets/favicon.ico");
 
 
-use crate::components::{About, CartState, CategoryList, OrderCanceled, OrderCompleted, TermsAndConditions};
+use crate::components::{About, CartState, CategoryList, OrderCanceled, OrderCompleted, TermsAndConditions, Auth};
 #[derive(Routable, PartialEq, Clone)]
 pub enum Route {
     #[layout(HeaderFooter)]
@@ -33,9 +33,10 @@ pub enum Route {
     FrontPage {},
     #[route("/admin/products")]
     CategoryList {},
+    #[route("/admin/auth")]
+    Auth {},
     #[route("/produkter/:..segments")]
     ProductPage { segments: Vec<String> },
-
     #[nest("/order")]
         #[route("/avbruten/:uuid")]
         OrderCanceled { uuid: String },
@@ -170,11 +171,12 @@ async fn order_middleware(
 }
 
 
+
 #[cfg(feature="server")]
 async fn launch_server() {
     let res = dotenvy::dotenv();
 
-    dioxus::logger::init(dioxus::logger::tracing::Level::INFO).expect("failed to init logger");
+    dioxus::logger::init(dioxus::logger::tracing::Level::DEBUG).expect("failed to init logger");
 
     if let Ok(dot_env) = res 
     {
@@ -212,6 +214,7 @@ async fn launch_server() {
        std::process::exit(2);
 
     }
+    
 
     info!("Initializing dioxus...");
     // Connect to the IP and PORT env vars passed by the Dioxus CLI (or your dockerfile)
@@ -225,6 +228,9 @@ async fn launch_server() {
     let dioxus_router = axum::Router::new()
         .serve_dioxus_application(ServeConfigBuilder::new(), App)
         .layer(axum::middleware::from_fn(order_middleware))
+        .layer(axum::middleware::from_fn(sjf_auth::axum::protect_authenticated_routes))
+        .layer(axum::Extension(sjf_auth::state::AuthState::new()) )
+        .layer(sjf_auth::axum::create_auth_layer())
         ;
     let custom_router= axum::Router::new()
             .route("/kubernetes/probes/liveness", get(|| async { StatusCode::NO_CONTENT }   )  )

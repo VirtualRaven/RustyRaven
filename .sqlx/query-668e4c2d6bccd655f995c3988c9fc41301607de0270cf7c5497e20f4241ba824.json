@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\r\n    INSERT INTO users (id,name,updated) VALUES ($1, $2, current_timestamp AT TIME ZONE 'UTC') \r\n    ON CONFLICT(id) DO update SET updated=excluded.updated, name=excluded.name;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "668e4c2d6bccd655f995c3988c9fc41301607de0270cf7c5497e20f4241ba824"
+}

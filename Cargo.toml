@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/db","crates/web","crates/image","crates/api","crates/payment"]
+members = ["crates/db","crates/web","crates/image","crates/api","crates/payment","crates/auth"]
 
 [workspace.dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
@@ -11,6 +11,9 @@ thiserror = "2.0.12"
 futures-util = "0.3.31"
 once_cell = "1.21.3"
 dotenvy = {version="0.15.7"}
+axum-login = {version="0.16.0"}
+axum = {version="0.7.9"}
+tokio = { version = "1"}
 
 [profile.wasm-dev]
 inherits = "dev"
@@ -22,3 +25,4 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
+

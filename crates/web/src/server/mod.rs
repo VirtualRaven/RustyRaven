@@ -9,6 +9,7 @@ use dioxus::logger::tracing::{info, warn,error};
 use sjf_api::checkout::CheckoutRequest;
 #[cfg(feature="server")]
 use sjf_db as db;
+pub mod auth;
 
 use dioxus::prelude::server_fn::codec::Json;
 
@@ -102,7 +103,7 @@ impl From<Product> for db::Product
 }
 
 
-#[server(endpoint="product/get", input= dioxus::prelude::server_fn::codec::GetUrl)]
+#[server(endpoint="auth/product/get", input= dioxus::prelude::server_fn::codec::GetUrl)]
 pub async fn get_products(category: u32) -> Result<Vec<Product>,ServerFnError> 
 {
     use dioxus::prelude::ServerFnError::ServerError;

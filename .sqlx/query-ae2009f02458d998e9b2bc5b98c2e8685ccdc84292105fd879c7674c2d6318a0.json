@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\r\nCREATE TABLE IF NOT EXISTS users(\r\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\r\n    name varchar(100),\r\n    created timestamp with time zone NOT NULL DEFAULT (current_timestamp AT TIME ZONE 'UTC'),\r\n    updated timestamp with time zone NOT NULL DEFAULT (current_timestamp AT TIME ZONE 'UTC'),\r\n    last_login timestamp with time zone NOT NULL DEFAULT (current_timestamp AT TIME ZONE 'UTC')\r\n);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "ae2009f02458d998e9b2bc5b98c2e8685ccdc84292105fd879c7674c2d6318a0"
+}

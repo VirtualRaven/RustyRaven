@@ -31,6 +31,7 @@ pub use cart::{Cart,CartState,CartContents,use_cart};
 mod admin;
 pub use admin::product::list::ProductList;
 pub use admin::category::CategoryList;
+pub use admin::auth::Auth;
 mod close_button;
 pub use close_button::CloseButton;
 mod image_upload;
