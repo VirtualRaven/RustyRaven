@@ -55,6 +55,16 @@ spec:
               secretKeyRef:
                 name: stripe-credentials
                 key: uri
+          - name: AUTH_RP_ID
+            valueFrom:
+              secretKeyRef:
+                name: stripe-credentials
+                key: auth-id
+          - name: AUTH_RP_URL
+            valueFrom:
+              secretKeyRef:
+                name: stripe-credentials
+                key: uri
         resources:
           requests:
             memory: "64Mi"
