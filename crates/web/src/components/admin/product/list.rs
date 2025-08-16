@@ -1,4 +1,3 @@
-
 use dioxus::logger::tracing::{info, warn};
 use dioxus::prelude::*;
 
@@ -9,21 +8,22 @@ use crate::server::{self, Product};
 #[derive(PartialEq, Clone, Props)]
 pub struct ProductRowProps {
     onclick: EventHandler<MouseEvent>,
-    product: ReadOnlySignal<Product>
+    product: ReadOnlySignal<Product>,
 }
 
 #[component]
 pub fn ProductRow(props: ProductRowProps) -> Element {
-
-
     let product = &*props.product.read();
-    let id = product.id.map( |x| x.to_string() ).unwrap_or("".into());
+    let id = product.id.map(|x| x.to_string()).unwrap_or("".into());
     let price = product.price.to_string();
-    let quantity = product.quantity.map(|x| x.to_string()+"st" ).unwrap_or("Obegränsad".into());
+    let quantity = product
+        .quantity
+        .map(|x| x.to_string() + "st")
+        .unwrap_or("Obegränsad".into());
 
     rsx! {
         tr {
-                td { 
+                td {
                     a {
                         onclick: move |evt| props.onclick.call(evt),
                         "{product.name}"
@@ -39,12 +39,11 @@ pub fn ProductRow(props: ProductRowProps) -> Element {
 #[derive(PartialEq, Clone, Props)]
 pub struct ProductTableProps {
     onedit: EventHandler<Product>,
-    products: ReadOnlySignal<Vec<Product>>
+    products: ReadOnlySignal<Vec<Product>>,
 }
 
 #[component]
-pub fn ProductTable(props: ProductTableProps) -> Element
-{
+pub fn ProductTable(props: ProductTableProps) -> Element {
     let products = props.products.clone();
     rsx! {
         table {
@@ -55,8 +54,8 @@ pub fn ProductTable(props: ProductTableProps) -> Element
             }
             for product in products.iter() {
 
-                ProductRow { 
-                    onclick: { 
+                ProductRow {
+                    onclick: {
                         let product: Product = (*product).clone();
                         move |_| {  props.onedit.call(product.clone()); }
                     },
@@ -65,24 +64,18 @@ pub fn ProductTable(props: ProductTableProps) -> Element
             }
         }
     }
-
 }
 
 #[component]
 pub fn ProductList(category: ReadOnlySignal<u32>) -> Element {
-
     let mut selected_product: Signal<Option<Product>> = use_signal(|| None);
-    let products : Signal<Vec<Product>> = use_signal(|| vec![]);
-    let update_counter : Signal<u32> = use_signal(|| 0);
+    let products: Signal<Vec<Product>> = use_signal(|| vec![]);
+    let update_counter: Signal<u32> = use_signal(|| 0);
 
-
-    let products= use_resource(move || async move {
-       info!("list update {}",update_counter.read());
-       server::get_products(category.read().clone()).await 
-    
+    let products = use_resource(move || async move {
+        info!("list update {}", update_counter.read());
+        server::get_products(category.read().clone()).await
     });
-
-
 
     let mut inspector = use_signal(|| false);
 
@@ -92,7 +85,7 @@ pub fn ProductList(category: ReadOnlySignal<u32>) -> Element {
             class: "product_list",
         match &*products.read_unchecked() {
             Some(Ok(products)) => rsx! {
-                if products.len() > 0 
+                if products.len() > 0
                 {
                     ProductTable{
                         onedit: move |product| {
@@ -111,7 +104,7 @@ pub fn ProductList(category: ReadOnlySignal<u32>) -> Element {
                 }
             },
             None => rsx! {
-                h2 { "Laddar..."} 
+                h2 { "Laddar..."}
             }
         },
 

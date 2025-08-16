@@ -1,11 +1,9 @@
-use dioxus::{prelude::*};
+use dioxus::prelude::*;
 
 #[component]
-pub fn About() -> Element 
-{
-
+pub fn About() -> Element {
     rsx! {
-        
+
         document::Title { "SJF Concept - Om butiken" }
         div {
             class: "about",

@@ -1,15 +1,13 @@
-
 use dioxus::prelude::*;
 
 #[component]
 pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> Element {
-
     let mut selected_image = use_signal(|| images().first().unwrap().clone());
 
     rsx! {
         div {
             class: "product-images",
-            if images().len() > 1 
+            if images().len() > 1
             {
                 div {
                     class: "preview",
@@ -44,26 +42,23 @@ pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> El
             }
         }
     }
-
 }
 #[component]
 pub fn AddToCartButton(product: ReadOnlySignal<sjf_api::product::Product>) -> Element {
-
     let mut cart = crate::components::cart::use_cart();
 
-    let added = use_memo( move || {
+    let added = use_memo(move || {
         let cart = cart.read();
         let product = product.read();
         let id = product.id;
-        cart.has_item(&id) 
-    }  );
+        cart.has_item(&id)
+    });
 
     let stock = product.read().stock;
 
-
     rsx! {
 
-        if let Some(0) = stock 
+        if let Some(0) = stock
         {
             div {
                 class: "outofstock",
@@ -71,7 +66,7 @@ pub fn AddToCartButton(product: ReadOnlySignal<sjf_api::product::Product>) -> El
             }
         }
         else {
-            button { 
+            button {
                 onclick: move |_| {
                     cart.with_mut(move |cart|
                         cart.add_item(product.read().clone())
@@ -80,14 +75,14 @@ pub fn AddToCartButton(product: ReadOnlySignal<sjf_api::product::Product>) -> El
                 if added() {
                     "Tillagd!"
                 }
-                else 
+                else
                 {
-                    "Lägg i varukorg" 
+                    "Lägg i varukorg"
                 }
             }
-            if let Some(s) = stock 
+            if let Some(s) = stock
             {
-                if s < 10 
+                if s < 10
                 {
                     span {
                         class: "lowstock",
@@ -101,18 +96,9 @@ pub fn AddToCartButton(product: ReadOnlySignal<sjf_api::product::Product>) -> El
     }
 }
 
-
-
 #[component]
 pub fn Product(product: ReadOnlySignal<sjf_api::product::Product>) -> Element {
-
-
-
-
-
-    
-    rsx! 
-    {
+    rsx! {
         document::Title { "SJF Concept - {product().name}" }
         crate::components::CategoryBar { path: product().category_name }
 
@@ -142,5 +128,4 @@ pub fn Product(product: ReadOnlySignal<sjf_api::product::Product>) -> Element {
 
 
     }
-
 }

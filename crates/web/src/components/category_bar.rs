@@ -1,11 +1,11 @@
 use dioxus::prelude::*;
 #[component]
-pub fn CategoryBar(path: ReadOnlySignal<Vec<String>> ) -> Element {
+pub fn CategoryBar(path: ReadOnlySignal<Vec<String>>) -> Element {
     rsx! {
-        div 
+        div
         {
             class: "category-bar",
-            for (i,segment) in path().iter().enumerate() 
+            for (i,segment) in path().iter().enumerate()
             {
                 span { a {
 

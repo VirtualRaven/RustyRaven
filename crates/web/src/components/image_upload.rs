@@ -1,79 +1,62 @@
-use std::collections::{BTreeMap };
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::vec;
 
 use dioxus::html::{image, FileEngine};
-use dioxus::signals::Signal;
-use dioxus::prelude::*;
 use dioxus::logger::tracing::{info, warn};
+use dioxus::prelude::*;
+use dioxus::signals::Signal;
 
-use crate::{ server};
-use crate::server::{AuthenticatedRequest};
-
+use crate::server;
+use crate::server::AuthenticatedRequest;
 
 #[derive(PartialEq, Clone, Props)]
 pub struct ImageUploadButtonProps {
-    thumbnails: Signal<BTreeMap<u32,u32>>,
-    multiple: Option<bool>
+    thumbnails: Signal<BTreeMap<u32, u32>>,
+    multiple: Option<bool>,
 }
 
-
 #[component]
-pub fn ImageUploadButton(props: ImageUploadButtonProps )-> Element
-{
-
+pub fn ImageUploadButton(props: ImageUploadButtonProps) -> Element {
     let mut thumbnails = props.thumbnails.clone();
-    let mut is_loading  = use_signal(|| false);
+    let mut is_loading = use_signal(|| false);
 
     let allow_multiple = props.multiple.unwrap_or(false);
 
-
     let read_files = move |file_engine: Arc<dyn FileEngine>| async move {
         let files = file_engine.files();
-        let mut file_contents : Vec<Vec<u8>> = Vec::new();
+        let mut file_contents: Vec<Vec<u8>> = Vec::new();
         file_contents.reserve(files.len());
 
         for file_name in &files {
             if let Some(contents) = file_engine.read_file(file_name).await {
-                info!("Read {} {}", file_name,contents.len());
+                info!("Read {} {}", file_name, contents.len());
                 file_contents.push(contents);
-            }
-            else {
-                info!("Failed to read {}",file_name);
+            } else {
+                info!("Failed to read {}", file_name);
             }
         }
 
-        if !file_contents.is_empty()
-        {
+        if !file_contents.is_empty() {
             is_loading.set(true);
-            let resp = server::upload_images( 
-                AuthenticatedRequest {
-                    data: file_contents
-                }
-            ).await;
+            let resp = server::upload_images(AuthenticatedRequest {
+                data: file_contents,
+            })
+            .await;
             is_loading.set(false);
-            info!("Server responded with {:#?}",resp);
-            
+            info!("Server responded with {:#?}", resp);
+
             match resp {
                 Ok(mut images) => {
-                    
-                    let mut image_ids: Vec<_> = images.iter().map(|(a,_)| a.clone()).collect();
-                    images.into_iter().for_each(
-                        |(image,variant)| {
-                            thumbnails.write().insert(image,variant);
-                        }
-                    );
+                    let mut image_ids: Vec<_> = images.iter().map(|(a, _)| a.clone()).collect();
+                    images.into_iter().for_each(|(image, variant)| {
+                        thumbnails.write().insert(image, variant);
+                    });
                     info!("Image upload completed");
-
-
-                },
-                Err(e) => {
-
                 }
+                Err(e) => {}
             }
         }
-
-
     };
     let upload_file = move |evt: FormEvent| async move {
         if let Some(file_engine) = evt.files() {

@@ -1,10 +1,26 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use stripe::{
-    generated::{billing::tax_rate, core::tax_code}, CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession, CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData, CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData, CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection, CreateCheckoutSessionShippingAddressCollectionAllowedCountries, CreateCheckoutSessionShippingOptions, CreateCheckoutSessionShippingOptionsShippingRateData, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount, CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior, CreateCheckoutSessionShippingOptionsShippingRateDataType, CreateCustomer, CreatePrice, CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, Price, Product, TaxRate, TaxRateId
+    CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession,
+    CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData,
+    CreateCheckoutSessionLineItemsPriceDataProductData,
+    CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData,
+    CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection,
+    CreateCheckoutSessionShippingAddressCollectionAllowedCountries,
+    CreateCheckoutSessionShippingOptions, CreateCheckoutSessionShippingOptionsShippingRateData,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit,
+    CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount,
+    CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior,
+    CreateCheckoutSessionShippingOptionsShippingRateDataType, CreateCustomer, CreatePrice,
+    CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, Price,
+    Product, TaxRate, TaxRateId,
+    generated::{billing::tax_rate, core::tax_code},
 };
 use tracing::info;
-
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAJOR_VERSION: &str = env!("CARGO_PKG_VERSION_MAJOR");
@@ -12,29 +28,21 @@ const NAME: &str = env!("CARGO_PKG_NAME");
 pub const CANCLE_PATH: &str = "/order/avbruten";
 pub const SUCCESS_PATH: &str = "/order/klar";
 
-fn client() -> ::stripe::Client
-{
+fn client() -> ::stripe::Client {
     let secret_key = dotenvy::var("STRIPE_API_KEY").expect("Missing STRIPE_API_KEY");
-    let client = Client::new(secret_key)
-    .with_app_info(
-        NAME.into(),
-        Some(VERSION.into()),
-        None
-    );
+    let client = Client::new(secret_key).with_app_info(NAME.into(), Some(VERSION.into()), None);
 
     client
 }
-
 
 struct ShippingOption {
     maximum: u32,
     minimum: u32,
     ammount: u32,
-    display_name: String
+    display_name: String,
 }
 
 impl ShippingOption {
-
     fn to_stripe(&self) -> CreateCheckoutSessionShippingOptions {
         CreateCheckoutSessionShippingOptions {
             shipping_rate_data: Some(
@@ -58,7 +66,6 @@ impl ShippingOption {
                                 )
                             }
                         ),
-                    
                     display_name: self.display_name.clone(),
                     fixed_amount: Some(
                         CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount {
@@ -79,26 +86,17 @@ impl ShippingOption {
     }
 }
 
-
-
-
-
-
-
 use once_cell::sync::OnceCell;
-static TAX_RATES: OnceCell<BTreeMap<u8,TaxRateId>> = OnceCell::new();
+static TAX_RATES: OnceCell<BTreeMap<u8, TaxRateId>> = OnceCell::new();
 static SITE_URL: OnceCell<String> = OnceCell::new();
 
-
-pub async fn init() -> Result<(),crate::PaymentError>
-{
-    SITE_URL.set( dotenvy::var("WEBSITE_URL").unwrap() ).unwrap();
+pub async fn init() -> Result<(), crate::PaymentError> {
+    SITE_URL.set(dotenvy::var("WEBSITE_URL").unwrap()).unwrap();
     create_swedish_tax_rates().await
 }
 
- async fn create_swedish_tax_rates() -> Result<(),crate::PaymentError>
-{
-    let predefined_tax_rates: BTreeSet<_> =  [25u8,12,6,0].into_iter().collect();
+async fn create_swedish_tax_rates() -> Result<(), crate::PaymentError> {
+    let predefined_tax_rates: BTreeSet<_> = [25u8, 12, 6, 0].into_iter().collect();
     let client = client();
 
     let params = ListTaxRates {
@@ -106,48 +104,39 @@ pub async fn init() -> Result<(),crate::PaymentError>
         ..Default::default()
     };
 
-
     let exsisting_rates = TaxRate::list(&client, &params).await?;
     let list = exsisting_rates.paginate(params);
     let mut stream = list.stream(&client);
     use futures_util::TryStreamExt;
 
+    let description_string = format!("tax-{}-{}", NAME, MAJOR_VERSION);
 
-    let description_string = format!("tax-{}-{}",NAME,MAJOR_VERSION);
+    let mut tax_rate_names = BTreeMap::<u8, TaxRateId>::new();
 
-
-    let mut tax_rate_names = BTreeMap::<u8,TaxRateId>::new();
-
-    while let Some(existing_tax_rate) = stream.try_next().await?
-    {
-
-        let swedish =  existing_tax_rate.country.unwrap_or_default() == "SE";
+    while let Some(existing_tax_rate) = stream.try_next().await? {
+        let swedish = existing_tax_rate.country.unwrap_or_default() == "SE";
         let from_app = existing_tax_rate.description.unwrap_or_default() == description_string;
-        let rate : u8 = existing_tax_rate.percentage as u8;
+        let rate: u8 = existing_tax_rate.percentage as u8;
         let id = existing_tax_rate.id;
-        if  swedish && from_app && predefined_tax_rates.contains(&rate)
-        {
-            info!("Found STRIPE tax rate {}",id);
-            tax_rate_names.insert(rate,id);
+        if swedish && from_app && predefined_tax_rates.contains(&rate) {
+            info!("Found STRIPE tax rate {}", id);
+            tax_rate_names.insert(rate, id);
         }
     }
 
-    for predefined_tax_rate in predefined_tax_rates 
-    {
-        if !tax_rate_names.contains_key(&predefined_tax_rate)
-        {
+    for predefined_tax_rate in predefined_tax_rates {
+        if !tax_rate_names.contains_key(&predefined_tax_rate) {
             info!("Creating STRIPE tax rate {}", predefined_tax_rate);
             let display_name = format!("Moms {}%", predefined_tax_rate);
-            let mut tax_rate = CreateTaxRate::new(&display_name , predefined_tax_rate as f64);
+            let mut tax_rate = CreateTaxRate::new(&display_name, predefined_tax_rate as f64);
             tax_rate.inclusive = true;
             tax_rate.country = Some("SE");
             tax_rate.description = Some(&description_string);
             tax_rate.active = Some(true);
-            tax_rate.tax_type = Some( stripe::TaxRateTaxType::Vat );
-            let created_tax_rate =  TaxRate::create(&client, tax_rate).await?;
+            tax_rate.tax_type = Some(stripe::TaxRateTaxType::Vat);
+            let created_tax_rate = TaxRate::create(&client, tax_rate).await?;
             tax_rate_names.insert(predefined_tax_rate, created_tax_rate.id);
         }
-
     }
 
     TAX_RATES.set(tax_rate_names).unwrap();
@@ -155,130 +144,145 @@ pub async fn init() -> Result<(),crate::PaymentError>
     Ok(())
 }
 
-
-pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
+pub async fn checkout(uuid: String) -> Result<String, crate::PaymentError> {
     let url = SITE_URL.get().unwrap();
     let client = client();
 
-
     let items = sjf_db::checkout::get_order(&uuid).await?;
 
+    let shipping_price = {
+        let total_order_quantity = items
+            .iter()
+            .map(|i| i.ordered_quantity)
+            .fold(0, |acc, i| acc + i);
+        let total_order_price = items
+            .iter()
+            .map(|i| i.price * i.ordered_quantity)
+            .fold(0, |acc, i| acc + i);
 
-
-    let shipping_price =
-    {
-        let total_order_quantity = items.iter().map(|i| i.ordered_quantity).fold(0, |acc,i| acc+i);
-        let total_order_price = items.iter().map(|i| i.price*i.ordered_quantity ).fold(0,|acc,i| acc+i);
-
-        let initial_price = match total_order_quantity{
+        let initial_price = match total_order_quantity {
             0..=2 => 89,
             3..=4 => 99,
-            5.. => 129
+            5.. => 129,
         };
 
-        if total_order_price > 999 { 0 } else { initial_price }
+        if total_order_price > 999 {
+            0
+        } else {
+            initial_price
+        }
     };
 
-
     let shipping_options = vec![
-        ShippingOption { maximum: 5, minimum: 2, ammount: shipping_price, display_name: "PostNord".into() }.to_stripe(),
-        ShippingOption { maximum: 5, minimum: 2, ammount: shipping_price, display_name: "Schenker".into() }.to_stripe(),
+        ShippingOption {
+            maximum: 5,
+            minimum: 2,
+            ammount: shipping_price,
+            display_name: "PostNord".into(),
+        }
+        .to_stripe(),
+        ShippingOption {
+            maximum: 5,
+            minimum: 2,
+            ammount: shipping_price,
+            display_name: "Schenker".into(),
+        }
+        .to_stripe(),
     ];
 
-
-
     let metadata = {
-        let mut map: HashMap<String,String> = HashMap::new();
+        let mut map: HashMap<String, String> = HashMap::new();
         map.insert("reservation".into(), uuid.clone());
         map.insert("app".into(), NAME.into());
         map.insert("app-version".into(), VERSION.into());
         map
     };
 
-    let items = items.into_iter().map(|item|{
+    let items = items
+        .into_iter()
+        .map(|item| {
+            let item_tax_rate = item.tax_rate as u8;
+            let tax_rate_id = TAX_RATES
+                .get()
+                .unwrap()
+                .get(&item_tax_rate)
+                .ok_or(crate::PaymentError::InvalidTaxRate(item_tax_rate))?;
+            let tax_rate_id = String::from(tax_rate_id.as_str());
+            let image_urls = item.image_path.map(|i| vec![format!("{}{}", url, i)]);
 
-        let item_tax_rate = item.tax_rate as u8;
-        let tax_rate_id = TAX_RATES.get().unwrap().get(&item_tax_rate).ok_or(crate::PaymentError::InvalidTaxRate(item_tax_rate))?;
-        let tax_rate_id = String::from(tax_rate_id.as_str());
-        let image_urls = item.image_path.map(|i|  vec![format!("{}{}",url,i)]);
-
-        Ok::<CreateCheckoutSessionLineItems, crate::PaymentError>(CreateCheckoutSessionLineItems {
-            quantity: Some(item.ordered_quantity.into()),
-            tax_rates: Some(vec![tax_rate_id]),
-            price_data: Some(
-                CreateCheckoutSessionLineItemsPriceData {
-                    currency:  Currency::SEK,
-                    product_data: Some(
-                        CreateCheckoutSessionLineItemsPriceDataProductData {
+            Ok::<CreateCheckoutSessionLineItems, crate::PaymentError>(
+                CreateCheckoutSessionLineItems {
+                    quantity: Some(item.ordered_quantity.into()),
+                    tax_rates: Some(vec![tax_rate_id]),
+                    price_data: Some(CreateCheckoutSessionLineItemsPriceData {
+                        currency: Currency::SEK,
+                        product_data: Some(CreateCheckoutSessionLineItemsPriceDataProductData {
                             description: None,
-                            images: image_urls  ,
+                            images: image_urls,
                             name: item.name,
                             tax_code: None,
                             metadata: Some({
                                 let mut map = metadata.clone();
-                                map.insert("article-number".into(), format!("artikel-{}",item.product_id));
+                                map.insert(
+                                    "article-number".into(),
+                                    format!("artikel-{}", item.product_id),
+                                );
                                 map
-
                             }),
                             ..Default::default()
-                        }
-                    ),
-                    tax_behavior: Some(CreateCheckoutSessionLineItemsPriceDataTaxBehavior::Inclusive),
-                    unit_amount: Some((100*item.price).into()),
+                        }),
+                        tax_behavior: Some(
+                            CreateCheckoutSessionLineItemsPriceDataTaxBehavior::Inclusive,
+                        ),
+                        unit_amount: Some((100 * item.price).into()),
+                        ..Default::default()
+                    }),
                     ..Default::default()
-                }
-            ),
-            ..Default::default()
+                },
+            )
         })
-
-    })
-    .collect::<Result<Vec<_>,_>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
     let metadata = {
-        let mut map: HashMap<String,String> = HashMap::new();
+        let mut map: HashMap<String, String> = HashMap::new();
         map.insert("reservation".into(), uuid.clone());
         map.insert("app".into(), NAME.into());
         map.insert("app-version".into(), VERSION.into());
         map
     };
 
-
     let checkout_session = {
         let mut params = CreateCheckoutSession::new();
-        
-        let cancel_url = format!("{}{}/{}",url,CANCLE_PATH,uuid);
-        let success_url = format!("{}{}/{}",url,SUCCESS_PATH,uuid);
+
+        let cancel_url = format!("{}{}/{}", url, CANCLE_PATH, uuid);
+        let success_url = format!("{}{}/{}", url, SUCCESS_PATH, uuid);
 
         params.shipping_options = Some(shipping_options);
         params.cancel_url = Some(&cancel_url);
         params.success_url = Some(&success_url);
         params.client_reference_id = Some(uuid.as_ref());
-        params.customer_creation = Some(
-            stripe::CheckoutSessionCustomerCreation::Always
-        );
-        params.payment_intent_data = Some(
-            CreateCheckoutSessionPaymentIntentData {
-                metadata: Some(metadata.clone()),
-                ..Default::default()
-            }
-        );
+        params.customer_creation = Some(stripe::CheckoutSessionCustomerCreation::Always);
+        params.payment_intent_data = Some(CreateCheckoutSessionPaymentIntentData {
+            metadata: Some(metadata.clone()),
+            ..Default::default()
+        });
         params.metadata = Some(metadata);
-        params.phone_number_collection = Some(
-            CreateCheckoutSessionPhoneNumberCollection {
-                enabled: true
-            }
-        );
-        params.shipping_address_collection = Some(
-            CreateCheckoutSessionShippingAddressCollection {
-                allowed_countries: vec![CreateCheckoutSessionShippingAddressCollectionAllowedCountries::Se ]
-            }
-        );
+        params.phone_number_collection =
+            Some(CreateCheckoutSessionPhoneNumberCollection { enabled: true });
+        params.shipping_address_collection = Some(CreateCheckoutSessionShippingAddressCollection {
+            allowed_countries: vec![
+                CreateCheckoutSessionShippingAddressCollectionAllowedCountries::Se,
+            ],
+        });
 
-        params.billing_address_collection = Some(
-            stripe::CheckoutSessionBillingAddressCollection::Auto
-        );
+        params.billing_address_collection =
+            Some(stripe::CheckoutSessionBillingAddressCollection::Auto);
 
         use std::time::{SystemTime, UNIX_EPOCH};
-        let expiry = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()+30*60;
+        let expiry = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            + 30 * 60;
         params.expires_at = Some(expiry as i64);
 
         params.mode = Some(CheckoutSessionMode::Payment);
@@ -287,6 +291,5 @@ pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
         CheckoutSession::create(&client, params).await?
     };
 
-
-    Ok(checkout_session.url.ok_or(crate::PaymentError::NoUrl )? )
+    Ok(checkout_session.url.ok_or(crate::PaymentError::NoUrl)?)
 }

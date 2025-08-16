@@ -1,6 +1,4 @@
-
 use dioxus::prelude::*;
-
 
 #[derive(PartialEq, Clone, Props)]
 pub struct CloseButtonProps {
@@ -8,8 +6,7 @@ pub struct CloseButtonProps {
 }
 
 #[component]
-pub fn CloseButton(props: CloseButtonProps ) -> Element {
-
+pub fn CloseButton(props: CloseButtonProps) -> Element {
     rsx! {
         div {
             onclick: move |e|  props.onclick.call(e),

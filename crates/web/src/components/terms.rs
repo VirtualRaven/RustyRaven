@@ -1,9 +1,7 @@
-
 use dioxus::{logger::tracing::info, prelude::*};
 
 #[component]
-pub fn TermsAndConditions() -> Element
-{
+pub fn TermsAndConditions() -> Element {
     rsx! {
         document::Title { "SJF Concept - Vilkor" }
         div {

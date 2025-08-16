@@ -2,10 +2,8 @@ use dioxus::prelude::*;
 
 pub const FOOTER_LOGO: Asset = asset!("/assets/SJF-logo.svg");
 
-
 #[component]
 pub fn Footer() -> Element {
-
     rsx! {
         footer {
             ul {

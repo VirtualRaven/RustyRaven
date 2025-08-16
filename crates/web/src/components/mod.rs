@@ -1,18 +1,14 @@
-
 #[derive(PartialEq)]
-enum MenuState 
-{
+enum MenuState {
     Closed,
-    Opened
+    Opened,
 }
 
-impl MenuState
-{
-    pub fn toggle(&self) -> Self
-    {
+impl MenuState {
+    pub fn toggle(&self) -> Self {
         match self {
             MenuState::Closed => MenuState::Opened,
-            MenuState::Opened => MenuState::Closed
+            MenuState::Opened => MenuState::Closed,
         }
     }
 }
@@ -27,11 +23,11 @@ pub use header::*;
 mod footer;
 pub use footer::*;
 mod cart;
-pub use cart::{Cart,CartState,CartContents,use_cart};
+pub use cart::{use_cart, Cart, CartContents, CartState};
 mod admin;
-pub use admin::product::list::ProductList;
-pub use admin::category::CategoryList;
 pub use admin::auth::Auth;
+pub use admin::category::CategoryList;
+pub use admin::product::list::ProductList;
 mod close_button;
 pub use close_button::CloseButton;
 mod image_upload;

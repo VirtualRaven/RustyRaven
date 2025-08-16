@@ -4,9 +4,15 @@ use crate::server::{category::get_children, get_previews};
 
 #[component]
 pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u32>) -> Element {
-
-    let children_and_previews: Resource<Result<(sjf_api::category::GetChildrenRsp, sjf_api::product::GetPreviewsResp), ServerFnError>> = use_resource(move || async move {
-
+    let children_and_previews: Resource<
+        Result<
+            (
+                sjf_api::category::GetChildrenRsp,
+                sjf_api::product::GetPreviewsResp,
+            ),
+            ServerFnError,
+        >,
+    > = use_resource(move || async move {
         let id = Some(*id.read());
         let cs = get_children(id.clone());
         let ps = get_previews(id, false, 100);
@@ -14,9 +20,7 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
         Ok((cs.await?, ps.await?))
     });
 
-    
-    rsx! 
-    {
+    rsx! {
         document::Title { "SJF Concept - {category_path.last().unwrap() }" }
         crate::components::CategoryBar { path: category_path }
 
@@ -47,7 +51,7 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
                                     div {
                                         class: "category-showcase",
                                         div {
-                                            for child in &c.children 
+                                            for child in &c.children
                                             {
                                                 Link {
                                                     to: crate::Route::ProductPage { segments:
@@ -56,7 +60,7 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
                                                             path.push(child.1.clone());
                                                             path
 
-                                                        } 
+                                                        }
                                                     },
                                                     div {
                                                         {child.1.clone()}
@@ -66,12 +70,12 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
                                         }
                                     }
                                 }
-                                
+
                                 if !previews_empty
                                 {
                                     div {
                                         class: "product-previews",
-                                        for preview in &p.previews 
+                                        for preview in &p.previews
                                         {
                                             crate::components::ProductPreview {preview: preview.clone()}
                                         }
@@ -95,5 +99,4 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
 
 
     }
-
 }

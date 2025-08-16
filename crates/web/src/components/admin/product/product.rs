@@ -4,74 +4,68 @@ use std::vec;
 
 use dioxus::html::details::open;
 use dioxus::html::{image, FileEngine};
-use dioxus::signals::Signal;
-use dioxus::prelude::*;
 use dioxus::logger::tracing::{info, warn};
+use dioxus::prelude::*;
+use dioxus::signals::Signal;
 
 use crate::components::ImageUploadButton;
 use crate::server::category::Delete;
-use crate::{components, server};
 use crate::server::{AuthenticatedRequest, Product};
+use crate::{components, server};
 
 use super::list::ProductList;
 
 #[component]
-pub fn SaveButton( product : Signal<Product>, update_counter: Signal<u32>, category: ReadOnlySignal<u32> ) -> Element {
-
+pub fn SaveButton(
+    product: Signal<Product>,
+    update_counter: Signal<u32>,
+    category: ReadOnlySignal<u32>,
+) -> Element {
     enum State {
         Idle,
         Saving,
         Saved(Product),
-        Error(Product)
+        Error(Product),
     }
 
-
     let mut saving_state = use_signal(|| State::Idle);
-    let is_unedited = use_memo(move || *product.read() == Product::new(category.read().clone()) );
-    
+    let is_unedited = use_memo(move || *product.read() == Product::new(category.read().clone()));
 
-    let changed_since_saved = use_memo( move || {
-         let current_product = &*product.read();
-         match *saving_state.read() 
-         {
-             State::Saved(ref saved_product) => saved_product != current_product,
-             State::Error(ref failed_product)=> failed_product != current_product,
-             _ => false
-         }
+    let changed_since_saved = use_memo(move || {
+        let current_product = &*product.read();
+        match *saving_state.read() {
+            State::Saved(ref saved_product) => saved_product != current_product,
+            State::Error(ref failed_product) => failed_product != current_product,
+            _ => false,
+        }
     });
 
     //Reset internal state if product changes
-    use_effect( move ||  {
+    use_effect(move || {
         if *changed_since_saved.read() {
             saving_state.set(State::Idle);
         }
     });
 
+    let button_text = use_memo(move || match *saving_state.read() {
+        State::Idle => "Spara",
+        State::Saving => "Sparar...",
+        State::Saved(_) => "Sparad!",
+        State::Error(_) => "Sparning misslyckades",
+    });
 
-    let button_text = use_memo(move || {
-        match *saving_state.read()
-        {
-            State::Idle => "Spara",
-            State::Saving => "Sparar...",
-            State::Saved(_) => "Sparad!",
-            State::Error(_) => "Sparning misslyckades"
-        }
-    } );
-
-
-    let button_class = match *saving_state.read()
-    {
+    let button_class = match *saving_state.read() {
         State::Error(_) => "red",
-        _ => "green"
+        _ => "green",
     };
 
     rsx! {
         button {
             disabled: is_unedited,
             class: "{button_class}",
-            onclick: move |_| { 
+            onclick: move |_| {
                 to_owned![product,saving_state];
-                spawn( async move  {  
+                spawn( async move  {
                     use crate::server::*;
                     saving_state.set(State::Saving);
                     let rsp = store_product(
@@ -96,68 +90,60 @@ pub fn SaveButton( product : Signal<Product>, update_counter: Signal<u32>, categ
             {button_text}
         }
     }
-
 }
 
 #[component]
-pub fn DeleteButton( product : Signal<Product>, update_counter: Signal<u32>, category: ReadOnlySignal<u32> ) -> Element {
-
-    #[derive(Clone,PartialEq)]
+pub fn DeleteButton(
+    product: Signal<Product>,
+    update_counter: Signal<u32>,
+    category: ReadOnlySignal<u32>,
+) -> Element {
+    #[derive(Clone, PartialEq)]
     enum State {
         Idle,
         Confirm,
         Deleting,
         Deleted(u32),
-        Error(u32)
+        Error(u32),
     }
 
-
     let mut delete_state = use_signal(|| State::Idle);
-    let is_created = use_memo(move || product.read().id.is_some() );
-    
+    let is_created = use_memo(move || product.read().id.is_some());
 
+    let button_text = use_memo(move || match *delete_state.read() {
+        State::Idle => "Ta bort",
+        State::Confirm => "Bekräfta borttagning",
+        State::Deleting => "Tar Bort...",
+        State::Deleted(_) => "Bort tagen",
+        State::Error(_) => "Sparning misslyckades",
+    });
 
-
-    let button_text = use_memo(move || {
-        match *delete_state.read()
-        {
-            State::Idle => "Ta bort",
-            State::Confirm => "Bekräfta borttagning",
-            State::Deleting => "Tar Bort...",
-            State::Deleted(_) => "Bort tagen",
-            State::Error(_) => "Sparning misslyckades"
+    let changed_since_saved = use_memo(move || {
+        let current_id = product.read().id.unwrap_or_default() as u32;
+        match *delete_state.read() {
+            State::Deleted(ref deleted_id) => *deleted_id != current_id,
+            State::Error(ref failed_id) => *failed_id != current_id,
+            _ => false,
         }
-    } );
-
-    let changed_since_saved = use_memo( move || {
-         let current_id = product.read().id.unwrap_or_default() as u32;
-         match  *delete_state.read() 
-         {
-             State::Deleted(ref deleted_id) => *deleted_id != current_id,
-             State::Error(ref failed_id)=> *failed_id != current_id,
-             _ => false
-         }
     });
 
     //Reset internal state if product changes
-    use_effect( move ||  {
+    use_effect(move || {
         if *changed_since_saved.read() {
             delete_state.set(State::Idle);
         }
     });
 
-
-    let button_class = match *delete_state.read()
-    {
+    let button_class = match *delete_state.read() {
         State::Error(_) => "red",
-        _ => "red"
+        _ => "red",
     };
 
     rsx! {
         button {
             disabled: !is_created(),
             class: "{button_class}",
-            onclick: move |_|  async move  {  
+            onclick: move |_|  async move  {
                     use crate::server::*;
 
 
@@ -170,7 +156,7 @@ pub fn DeleteButton( product : Signal<Product>, update_counter: Signal<u32>, cat
                                 async move {
                                     wasmtimer::tokio::sleep(std::time::Duration::from_secs(2)).await;
                                     if *delete_state.read() == State::Confirm
-                                    {   
+                                    {
                                         delete_state.set(State::Idle);
                                     }
                                 }
@@ -211,13 +197,10 @@ pub fn DeleteButton( product : Signal<Product>, update_counter: Signal<u32>, cat
             {button_text}
         }
     }
-
 }
 
 #[component]
-fn ProductName(product: Signal<Product> )-> Element
-{
-
+fn ProductName(product: Signal<Product>) -> Element {
     rsx! {
         div {
             class: "inputsection",
@@ -229,14 +212,14 @@ fn ProductName(product: Signal<Product> )-> Element
                 value: "{product.read().name}",
                 oninput: move |evt| {
                     product.write().name = {
-                        if evt.value().len() > 100 
+                        if evt.value().len() > 100
                         {
                             evt.value()[0..100].to_string()
                         }
                         else {
                             evt.value()
                         }
-                    };                    
+                    };
 
 
                 }
@@ -245,9 +228,8 @@ fn ProductName(product: Signal<Product> )-> Element
     }
 }
 #[component]
-fn ProductInventory(product: Signal<Product> )-> Element
-{
-    rsx!{ 
+fn ProductInventory(product: Signal<Product>) -> Element {
+    rsx! {
                 div {
                     class: "inputsection",
                     label {
@@ -278,7 +260,7 @@ fn ProductInventory(product: Signal<Product> )-> Element
                                     product.quantity = Some(1)
                                 })
                             }
-                            else { 
+                            else {
                                 product.with_mut( |product| {
                                     product.quantity = None
                                 })
@@ -292,8 +274,7 @@ fn ProductInventory(product: Signal<Product> )-> Element
 }
 
 #[component]
-fn ProductPrice(product: Signal<Product> )-> Element
-{
+fn ProductPrice(product: Signal<Product>) -> Element {
     rsx! {
         div {
             class: "inputsection",
@@ -312,7 +293,7 @@ fn ProductPrice(product: Signal<Product> )-> Element
                             Ok(price) => price,
                             Err(e) => 0
                         }
-                    };                    
+                    };
 
 
                 }
@@ -323,8 +304,7 @@ fn ProductPrice(product: Signal<Product> )-> Element
 }
 
 #[component]
-fn ProductDescription(product: Signal<Product> )-> Element
-{
+fn ProductDescription(product: Signal<Product>) -> Element {
     rsx! {
             label {
                 "Beskrivning"
@@ -347,7 +327,7 @@ fn ProductTax(product: Signal<Product>) -> Element {
                 for: "producttax",
                 "Moms"
             }
-            select {  
+            select {
                 onchange: move |e| {
                     product.write().tax_rate = e.value().parse().unwrap();
                 },
@@ -361,11 +341,12 @@ fn ProductTax(product: Signal<Product>) -> Element {
     }
 }
 
-
-
 #[component]
-fn ProductImage(image_id: u32, product: Signal<Product>, thumbnails: Signal<BTreeMap<u32,u32>>)-> Element {
-
+fn ProductImage(
+    image_id: u32,
+    product: Signal<Product>,
+    thumbnails: Signal<BTreeMap<u32, u32>>,
+) -> Element {
     rsx! {
         div {
             onclick: { let image_id = image_id.clone(); move |_| {
@@ -385,61 +366,57 @@ fn ProductImage(image_id: u32, product: Signal<Product>, thumbnails: Signal<BTre
     }
 }
 
-
 #[component]
-fn ProductImages(product: Signal<Product> )-> Element
-{
+fn ProductImages(product: Signal<Product>) -> Element {
     let mut thumbnails: Signal<BTreeMap<u32, u32>> = use_signal(move || BTreeMap::new());
 
-    let product_id = use_memo(move || product.read().id ); 
-    let resource = use_resource(move || async move
-    {
-        if let Some(id)= product_id.read().clone()
-        {
-            if let Ok(v)= server::get_product_images( AuthenticatedRequest { data: (id as u32) } ).await
+    let product_id = use_memo(move || product.read().id);
+    let resource = use_resource(move || async move {
+        if let Some(id) = product_id.read().clone() {
+            if let Ok(v) =
+                server::get_product_images(AuthenticatedRequest { data: (id as u32) }).await
             {
-                thumbnails.with_mut(|t|
-                {
-                    v.into_iter().filter(|(_,v)| !v.is_empty() ).for_each(|(k,mut v) |  {t.insert(k, v.remove(0) );} );
+                thumbnails.with_mut(|t| {
+                    v.into_iter()
+                        .filter(|(_, v)| !v.is_empty())
+                        .for_each(|(k, mut v)| {
+                            t.insert(k, v.remove(0));
+                        });
                 });
-
             }
         }
-    }
-    );
+    });
 
-    let thumbnail_ids : Memo<BTreeSet<u32>>= use_memo(move ||thumbnails.read().keys().cloned().collect() );
+    let thumbnail_ids: Memo<BTreeSet<u32>> =
+        use_memo(move || thumbnails.read().keys().cloned().collect());
     let thumbnails_have_changed = use_memo(move || {
         let empty = BTreeSet::new();
-        let lh =  &*thumbnail_ids.read() ;
+        let lh = &*thumbnail_ids.read();
         let product = product.read();
         let rh = product.images.as_ref().unwrap_or(&empty);
         let res = lh != rh;
         res
-
-       });
-    use_effect(move  || {
-        if (thumbnail_ids.read().is_empty() )
-        {
+    });
+    use_effect(move || {
+        if (thumbnail_ids.read().is_empty()) {
             return;
         }
 
         let mut image_ids = thumbnail_ids.read().iter().cloned().collect();
-        
-        if *thumbnails_have_changed.read()
-        {
+
+        if *thumbnails_have_changed.read() {
             let updated_images = match product.write().images.take() {
                 Some(mut existing_images) => {
                     existing_images.append(&mut image_ids);
                     existing_images
                 }
-                None=> image_ids
+                None => image_ids,
             };
-            product.write().images=Some(updated_images);
+            product.write().images = Some(updated_images);
         }
     });
 
-    rsx!{
+    rsx! {
         div {
             class: "imagesection",
             if let Some(ref images) = product.read().images
@@ -453,21 +430,16 @@ fn ProductImages(product: Signal<Product> )-> Element
     }
 }
 
-
 #[derive(PartialEq, Clone, Props)]
 struct FormFieldProps {
     product: Product,
     update_counter: Signal<u32>,
-    category: ReadOnlySignal<u32>
+    category: ReadOnlySignal<u32>,
 }
-
-
 
 #[component]
 fn FormFields(props: FormFieldProps) -> Element {
-
-
-    let mut product =use_signal(move || props.product);
+    let mut product = use_signal(move || props.product);
 
     rsx! {
             ProductName {product}
@@ -485,10 +457,10 @@ fn FormFields(props: FormFieldProps) -> Element {
                     disabled: product.read().id.is_none(),
                     onclick: move |_| {
                         product.set(Product::new(props.category.read().clone()))
-                        
+
                     },
                     "Ny produkt"
-                }, 
+                },
                 SaveButton {  product: product, update_counter: props.update_counter, category: props.category }
 
             }
@@ -496,14 +468,14 @@ fn FormFields(props: FormFieldProps) -> Element {
     }
 }
 
-
-
 #[component]
-pub fn ProductDetails( product : Signal<Option<Product>>, update_counter: Signal<u32>, category: ReadOnlySignal<u32> ) -> Element {
-
-    match &*product.read()
-    {
-        None => rsx ! {},
+pub fn ProductDetails(
+    product: Signal<Option<Product>>,
+    update_counter: Signal<u32>,
+    category: ReadOnlySignal<u32>,
+) -> Element {
+    match &*product.read() {
+        None => rsx! {},
         Some(p) => rsx! {
             div {
                 class: "overlay",
@@ -524,7 +496,6 @@ pub fn ProductDetails( product : Signal<Option<Product>>, update_counter: Signal
                 },
                 FormFields { product: p.clone(), update_counter,category }
             }
-        }
+        },
     }
-
 }

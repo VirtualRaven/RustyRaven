@@ -1,3 +1,3 @@
 pub mod category;
-pub mod product;
 pub mod checkout;
+pub mod product;

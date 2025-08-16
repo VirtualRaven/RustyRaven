@@ -1,55 +1,52 @@
-
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::thread::current;
 
 use dioxus::html::details::open;
 use dioxus::html::FileEngine;
-use dioxus::signals::Signal;
-use dioxus::prelude::*;
 use dioxus::logger::tracing::{info, warn};
+use dioxus::prelude::*;
+use dioxus::signals::Signal;
 
 use crate::components::admin::category;
-use crate::{components, server};
 use crate::server::{AuthenticatedRequest, Product};
+use crate::{components, server};
 
-
-#[derive(PartialEq,Clone,Debug)]
+#[derive(PartialEq, Clone, Debug)]
 struct Category {
     id: u32,
     depth: u32,
     name: String,
-    parent: Option<u32>
+    parent: Option<u32>,
 }
 
-
 #[component]
-fn CategoryRemovalButton(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>  ) -> Element
-{
+fn CategoryRemovalButton(
+    category: ReadOnlySignal<Category>,
+    delete_fn: EventHandler<()>,
+) -> Element {
     enum State {
         Idle,
         Removing,
         Error,
-        Removed
+        Removed,
     };
 
-    let mut state = use_signal(||State::Idle);
-
+    let mut state = use_signal(|| State::Idle);
 
     let current_state = &*state.read();
-    match current_state 
-    {
+    match current_state {
         State::Idle => rsx! {
             span {
                onclick: move |e| async move {
                    e.stop_propagation();
-                
+
                    state.set(State::Removing);
                    let res = server::category::delete( AuthenticatedRequest { data: sjf_api::category::DeleteReq { id: category().id } }  ).await;
-                   if let  Ok(_) = res 
+                   if let  Ok(_) = res
                    {
                        state.set(State::Removed);
-                       delete_fn.call(()); 
+                       delete_fn.call(());
                    }
                    else{
                     state.set(State::Error);
@@ -75,41 +72,33 @@ fn CategoryRemovalButton(category: ReadOnlySignal<Category>, delete_fn: EventHan
             span {
                 "Bort plockad"
             }
-        }
+        },
     }
-
 }
 
-
 #[component]
-fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>  ) -> Element
-{
-    
+fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>) -> Element {
     let mut categories: Signal<Vec<Category>> = use_signal(|| Vec::new());
-    let mut name : Signal<String> = use_signal(move || category.read().name.clone());
-    let mut editable: Signal<bool> = use_signal(||false);
-    let mut menu_open: Signal<bool> = use_signal(||false);
+    let mut name: Signal<String> = use_signal(move || category.read().name.clone());
+    let mut editable: Signal<bool> = use_signal(|| false);
+    let mut menu_open: Signal<bool> = use_signal(|| false);
     let mut expanded: Signal<bool> = use_signal(|| false);
 
     let _ = use_resource(move || async move {
-        match server::category::get_children(Some(category.read().id.clone())).await
-        {
+        match server::category::get_children(Some(category.read().id.clone())).await {
             Ok(rsp) => {
                 let parent_depth = category.read().depth;
                 let parent_id = category.read().id;
                 categories
-                .write()
-                .extend(
-                    rsp.children
-                    .into_iter()
-                    .map(
-                        |(id,name)| Category {
-                            id,name, depth: parent_depth+1, parent: Some(parent_id.clone()) 
-                        }  
-                    )
-                );
+                    .write()
+                    .extend(rsp.children.into_iter().map(|(id, name)| Category {
+                        id,
+                        name,
+                        depth: parent_depth + 1,
+                        parent: Some(parent_id.clone()),
+                    }));
             }
-            Err(_) => warn!("Failed to load children!")
+            Err(_) => warn!("Failed to load children!"),
         }
     });
 
@@ -118,13 +107,13 @@ fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>
             key: category.read().id,
             id: "{category.read().id}",
             class: "categoryItem",
-            div { 
+            div {
                 class: "categoryRow",
                 span {
                     onclick: move |_| { expanded.with_mut(| o| {*o = !*o;} ); },
                     "V"
                 }
-                if *editable.read() 
+                if *editable.read()
                 {
                     input {type:"text",
                         onfocusout: move |_| {editable.set(false); },
@@ -132,13 +121,13 @@ fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>
                         onchange: move |evt|  async move {
                                 name.set(evt.value());
                                 server::category::update_name(AuthenticatedRequest { data: (category.read().id, name.read().clone() ) }).await;
-                            
+
                         },
                         value: "{name.read()}"
                     }
                 }
                 else {
-                    h3 { 
+                    h3 {
                         onclick: move |_| {editable.set(true)},
                         "{name.read()}"}
                 }
@@ -161,7 +150,7 @@ fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>
                                     }
                                 ).await;
 
-                                match rsp 
+                                match rsp
                                 {
                                     Ok(rsp) => {
                                         categories.write().push(Category { id: rsp.id, depth: rsp.depth, name, parent });
@@ -184,16 +173,16 @@ fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>
                 }
             }
 
-            if *expanded.read() 
+            if *expanded.read()
             {
                 for category in categories.read().iter()
                 {
-                    CategoryEntry { key: "{category.id}", category: category.clone(), 
+                    CategoryEntry { key: "{category.id}", category: category.clone(),
                         delete_fn: {
-                            let current_id = category.id; 
-                            move || { 
-                                categories.write().retain(|c| {c.id != current_id} ); 
-                            }  
+                            let current_id = category.id;
+                            move || {
+                                categories.write().retain(|c| {c.id != current_id} );
+                            }
                         }
                     }
                 }
@@ -202,59 +191,42 @@ fn CategoryEntry(category: ReadOnlySignal<Category>, delete_fn: EventHandler<()>
 
         }
     }
-
 }
 
 pub const ADMIN_CSS: Asset = asset!("/assets/styling/admin.scss");
 
-
-
-
 #[component]
 pub fn CategoryList() -> Element {
-
     let mut categories: Signal<Vec<Category>> = use_signal(|| Vec::new());
-    
-
 
     let loaded_categories = use_resource(move || async move {
-
-        match crate::server::auth::is_authenticated().await
-        {
-            Ok(true) => {
-                match server::category::get_children(None).await
-                {
-                    Ok(rsp) => {
-                        categories
+        match crate::server::auth::is_authenticated().await {
+            Ok(true) => match server::category::get_children(None).await {
+                Ok(rsp) => {
+                    categories
                         .write()
-                        .extend(
-                            rsp.children
-                            .into_iter()
-                            .map(
-                                |(id,name)| Category {
-                                    id,name, depth: 0, parent: None 
-                                }  
-                            )
-                        );
-                        Ok(())
-                    }
-                    Err(_) => {
-                        warn!("Failed to load children!");
-                        Err(())
-                    }
+                        .extend(rsp.children.into_iter().map(|(id, name)| Category {
+                            id,
+                            name,
+                            depth: 0,
+                            parent: None,
+                        }));
+                    Ok(())
                 }
-            }
+                Err(_) => {
+                    warn!("Failed to load children!");
+                    Err(())
+                }
+            },
             Ok(false) | Err(_) => {
                 let nav = navigator();
-                nav.push( NavigationTarget::<crate::Route>::Internal(crate::Route::Auth {}) );
+                nav.push(NavigationTarget::<crate::Route>::Internal(
+                    crate::Route::Auth {},
+                ));
                 Err(())
             }
         }
-
-
     });
-
-
 
     rsx! {
         document::Link { rel: "stylesheet", href: ADMIN_CSS }
@@ -268,14 +240,14 @@ pub fn CategoryList() -> Element {
             Some(Ok(())) => rsx! {
                 for category in categories.read().iter()
                 {
-                    CategoryEntry { 
+                    CategoryEntry {
                         key: "{category.id}",
-                        category: category.clone(), 
+                        category: category.clone(),
                         delete_fn: {
-                            let current_id = category.id; 
-                            move || { 
-                                categories.write().retain(|c| {  c.id != current_id} ); 
-                            }  
+                            let current_id = category.id;
+                            move || {
+                                categories.write().retain(|c| {  c.id != current_id} );
+                            }
                         }
                     }
                 }
@@ -288,7 +260,7 @@ pub fn CategoryList() -> Element {
                 }
             },
             None => rsx! {
-                h2 { "Laddar..."} 
+                h2 { "Laddar..."}
             }
         },
 
@@ -305,7 +277,7 @@ pub fn CategoryList() -> Element {
                     }
                 ).await;
 
-                match rsp 
+                match rsp
                 {
                     Ok(rsp) => categories.write().push(Category { id: rsp.id, depth: rsp.depth, parent: None,name }),
                     Err(e) => warn!("{:#?}", e)

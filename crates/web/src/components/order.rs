@@ -1,13 +1,11 @@
 use dioxus::prelude::*;
 
-
 #[component]
-pub fn OrderCompleted(uuid: ReadOnlySignal<String>) -> Element 
-{
+pub fn OrderCompleted(uuid: ReadOnlySignal<String>) -> Element {
     let mut cart_state = crate::components::cart::use_cart();
     let _ = use_resource(move || async move {
-        let _ =  uuid.read();
-        cart_state.with_mut(|cart|{
+        let _ = uuid.read();
+        cart_state.with_mut(|cart| {
             cart.clear();
         });
     });
@@ -37,8 +35,7 @@ pub fn OrderCompleted(uuid: ReadOnlySignal<String>) -> Element
 }
 
 #[component]
-pub fn OrderCanceled(uuid: ReadOnlySignal<String>) -> Element 
-{
+pub fn OrderCanceled(uuid: ReadOnlySignal<String>) -> Element {
     rsx! {
         div {
             class: "about",
@@ -60,6 +57,6 @@ pub fn OrderCanceled(uuid: ReadOnlySignal<String>) -> Element
                 },
             }
         }
-        
+
     }
 }

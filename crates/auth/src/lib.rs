@@ -1,13 +1,12 @@
 pub mod axum;
-pub mod state;
 pub mod endpoints;
 mod error;
+pub mod state;
 
-pub use error::WebauthnError as Error;
 use ::axum::async_trait;
 use axum_login::{AuthUser, AuthnBackend, UserId};
-use webauthn_rs::prelude::{ Uuid};
-
+pub use error::WebauthnError as Error;
+use webauthn_rs::prelude::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct User {
@@ -28,8 +27,7 @@ impl AuthUser for User {
 }
 
 #[derive(Clone, Default)]
-pub struct Backend {
-}
+pub struct Backend {}
 
 #[derive(Clone)]
 pub struct Credentials {
@@ -50,18 +48,12 @@ impl AuthnBackend for Backend {
     }
 
     async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
-        match crate::endpoints::User::lookup_id(&user_id).await?
-        {
-            Some(name) => {
-                Ok(Some(
-                    User {
-                        id: user_id.clone(),
-                        name
-                    }
-                ))
-            },
-            None => Ok(None)
+        match crate::endpoints::User::lookup_id(&user_id).await? {
+            Some(name) => Ok(Some(User {
+                id: user_id.clone(),
+                name,
+            })),
+            None => Ok(None),
         }
-        
     }
 }

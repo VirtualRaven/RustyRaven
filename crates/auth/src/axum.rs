@@ -42,4 +42,3 @@ pub fn create_auth_layer()
 
     AuthManagerLayerBuilder::new(backend, session_layer).build()
 }
-

@@ -1,12 +1,10 @@
+use dioxus::logger::tracing::{info, warn};
 use dioxus::prelude::*;
-use dioxus::logger::tracing::{warn,info};
 
 use crate::server::auth::AuthApiError;
 
-
 #[component]
-fn Register(user_name: ReadOnlySignal<String>) -> Element
-{
+fn Register(user_name: ReadOnlySignal<String>) -> Element {
     #[derive(Clone)]
     enum State {
         Idle,
@@ -15,15 +13,12 @@ fn Register(user_name: ReadOnlySignal<String>) -> Element
         Finishing,
         Created,
         Error(String),
-
     }
     let mut state = use_signal(|| State::Idle);
-    let mut challenge = use_signal(|| String::from("") );
-
+    let mut challenge = use_signal(|| String::from(""));
 
     let current_state = (*state.read()).clone();
-    match current_state
-    {
+    match current_state {
         State::Idle => rsx! {
             button {
                 onclick: move |_| async move{
@@ -41,7 +36,7 @@ fn Register(user_name: ReadOnlySignal<String>) -> Element
                 "Skapa konto!"
             }
         },
-        State::TerminalChallenge=> rsx! {
+        State::TerminalChallenge => rsx! {
             div {
                 label {"Ange kod från administratör"}
                 input {
@@ -51,7 +46,7 @@ fn Register(user_name: ReadOnlySignal<String>) -> Element
                     },
                     "{challenge}"
                 }
-                button { 
+                button {
 
                     onclick: move |_| async move {
                         state.set(State::StartRegistration);
@@ -89,32 +84,32 @@ fn Register(user_name: ReadOnlySignal<String>) -> Element
 
 
                     },
-                    "Bekräfta kod" 
+                    "Bekräfta kod"
                 }
             }
         },
-        State::StartRegistration=> rsx! {
+        State::StartRegistration => rsx! {
             button {
                 class:"green",
                 disabled: true,
                 "Registrerar..."
             }
         },
-        State::Finishing=> rsx! {
+        State::Finishing => rsx! {
             button {
                 class:"green",
                 disabled: true,
                 "Avslutrar..."
             }
         },
-        State::Created=> rsx! {
+        State::Created => rsx! {
             button {
                 class:"green",
                 disabled: true,
                 "Konto registrerat"
             }
         },
-        State::Error(e)=> rsx! {
+        State::Error(e) => rsx! {
             button {
                 class:"red",
                 title: e,
@@ -122,36 +117,26 @@ fn Register(user_name: ReadOnlySignal<String>) -> Element
                 "Misslyckades"
             }
         },
-
     }
-
 }
 
-
-
-
 #[component]
-fn Login(user_name: ReadOnlySignal<String>) -> Element
-{
-
+fn Login(user_name: ReadOnlySignal<String>) -> Element {
     #[derive(Clone)]
     enum State {
         Idle,
         Pending,
         LoggedIn,
-        Error(String)
+        Error(String),
     }
-
 
     let mut state = use_signal(|| State::Idle);
 
-    let current_state  =(*state.read()).clone();
+    let current_state = (*state.read()).clone();
 
-    match current_state 
-    {
-
+    match current_state {
         State::Idle => rsx! {
-            button { 
+            button {
                 onclick: move |_| async move {
 
                         use thiserror::Error;
@@ -191,19 +176,19 @@ fn Login(user_name: ReadOnlySignal<String>) -> Element
         },
 
         State::Pending => rsx! {
-            button { 
+            button {
                 disabled: true,
                 "Loggar in..."
              }
         },
         State::LoggedIn => rsx! {
-            button { 
+            button {
                 disabled: true,
                 "Inloggad!"
              }
         },
         State::Error(e) => rsx! {
-            button { 
+            button {
                 title: e,
                 class: "red",
                 onclick: move |_| {state.set(State::Idle); },
@@ -214,10 +199,8 @@ fn Login(user_name: ReadOnlySignal<String>) -> Element
 }
 
 #[component]
-pub fn Auth() -> Element
-{
-    let mut user_name  = use_signal(|| String::from(""));
-
+pub fn Auth() -> Element {
+    let mut user_name = use_signal(|| String::from(""));
 
     rsx! {
         document::Link { rel: "stylesheet", href: super::category::ADMIN_CSS }
@@ -233,10 +216,10 @@ pub fn Auth() -> Element
                     for: "username",
                     "Användarnamn"
                 }
-                input { 
+                input {
                     id:"username",
                     r#type: "text",
-                    oninput: move |evt| 
+                    oninput: move |evt|
                     {
                         user_name.set(evt.data().value());
                     }
@@ -248,5 +231,4 @@ pub fn Auth() -> Element
             }
         }
     }
-
 }

@@ -3,27 +3,19 @@ use sjf_api::product::{Image, Preview};
 
 use crate::server;
 
-
 #[component]
-pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element 
-{
-
-    let mut loaded = use_signal(||false);
-    if preview.read().images.is_empty() 
-    {
+pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element {
+    let mut loaded = use_signal(|| false);
+    if preview.read().images.is_empty() {
         rsx! {
             span {
                 "No image",
             }
         }
-
-    }
-    else 
-    {
+    } else {
         let previewr = preview.read();
         let image = previewr.images.first().unwrap();
         let srcset = image.srcset();
-    
 
         rsx!(
             Link {
@@ -49,45 +41,40 @@ pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element
                 }
             }
         )
-
-    } 
+    }
 }
 
-
 #[component]
-fn Latest() -> Element
-{
-    
-    let previews: Resource<Result<(sjf_api::product::GetPreviewsResp, Preview,Image), ServerFnError>> = use_resource(|| async  {
-         let res = server::get_previews(None,true,4).await?;
+fn Latest() -> Element {
+    let previews: Resource<
+        Result<(sjf_api::product::GetPreviewsResp, Preview, Image), ServerFnError>,
+    > = use_resource(|| async {
+        let res = server::get_previews(None, true, 4).await?;
 
         use rand::distr::Distribution;
-        let mut  rng = rand::rng();
+        let mut rng = rand::rng();
 
-        let random_index: usize =
-        {
-           let len = res.previews.len();
-           let between = rand::distr::Uniform::try_from(0..len).unwrap();
-           between.sample(&mut rng)
+        let random_index: usize = {
+            let len = res.previews.len();
+            let between = rand::distr::Uniform::try_from(0..len).unwrap();
+            between.sample(&mut rng)
         };
 
         let highlight: Preview = res.previews[random_index].clone();
 
         let random_image_index: usize = {
             let len = highlight.images.len();
-           let between = rand::distr::Uniform::try_from(0..len).unwrap();
-           between.sample(&mut rng)
+            let between = rand::distr::Uniform::try_from(0..len).unwrap();
+            between.sample(&mut rng)
         };
 
         let highlighted_image = highlight.images[random_image_index].clone();
 
-        Ok((res,highlight,highlighted_image))
+        Ok((res, highlight, highlighted_image))
     });
 
-
-    match &*previews.read_unchecked() 
-    {
-        Some(Ok(( rsp,highlight,highlighted_image))) => rsx! {
+    match &*previews.read_unchecked() {
+        Some(Ok((rsp, highlight, highlighted_image))) => rsx! {
             h1 {
                 "Senaste nytt!"
             }
@@ -118,7 +105,7 @@ fn Latest() -> Element
                         "{highlight.price}kr"
                     }
                 }
-                
+
 
             }
 
@@ -128,29 +115,21 @@ fn Latest() -> Element
 
 
         },
-        Some(Err(_)) => rsx! {
-
-        },
-        None=> rsx! {
+        Some(Err(_)) => rsx! {},
+        None => rsx! {
             span {
                 "Loading..."
             }
-        }
-    } 
-
-
-
-} 
-
+        },
+    }
+}
 
 #[component]
-fn ProductCategories() -> Element 
-{
-    
-    let mut context = use_context::< crate::components::CategorySignal>();
+fn ProductCategories() -> Element {
+    let mut context = use_context::<crate::components::CategorySignal>();
 
     rsx! {
-        if let Some(ref cs) = context() 
+        if let Some(ref cs) = context()
         {
             div {
                 class: "category-showcase",
@@ -171,14 +150,10 @@ fn ProductCategories() -> Element
             }
         }
     }
-
-
 }
 
-
 #[component]
-pub fn FrontPage() -> Element 
-{
+pub fn FrontPage() -> Element {
     rsx! {
         document::Title { "SJF Concept" }
         div {
@@ -188,5 +163,4 @@ pub fn FrontPage() -> Element
 
         }
     }
-
 }
