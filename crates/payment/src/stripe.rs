@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use stripe::{
-    generated::{billing::tax_rate, core::tax_code}, CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession, CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData, CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData, CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection, CreateCheckoutSessionShippingAddressCollectionAllowedCountries, CreateCustomer, CreatePrice, CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, Price, Product, TaxRate, TaxRateId
+    generated::{billing::tax_rate, core::tax_code}, CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession, CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData, CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData, CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection, CreateCheckoutSessionShippingAddressCollectionAllowedCountries, CreateCheckoutSessionShippingOptions, CreateCheckoutSessionShippingOptionsShippingRateData, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount, CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior, CreateCheckoutSessionShippingOptionsShippingRateDataType, CreateCustomer, CreatePrice, CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, Price, Product, TaxRate, TaxRateId
 };
 use tracing::info;
 
@@ -24,6 +24,62 @@ fn client() -> ::stripe::Client
 
     client
 }
+
+
+struct ShippingOption {
+    maximum: u32,
+    minimum: u32,
+    ammount: u32,
+    display_name: String
+}
+
+impl ShippingOption {
+
+    fn to_stripe(&self) -> CreateCheckoutSessionShippingOptions {
+        CreateCheckoutSessionShippingOptions {
+            shipping_rate_data: Some(
+                CreateCheckoutSessionShippingOptionsShippingRateData {
+                    delivery_estimate: Some(
+                            CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate
+                            {
+                                maximum: Some(
+                                    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum
+                                    {
+                                        value: self.maximum as i64,
+                                        unit: CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit::BusinessDay
+                                    }
+                                ),
+                                minimum: Some(
+                                    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum
+                                    {
+                                        value: self.minimum as i64,
+                                        unit: CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit::BusinessDay
+                                    }
+                                )
+                            }
+                        ),
+                    
+                    display_name: self.display_name.clone(),
+                    fixed_amount: Some(
+                        CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount {
+                            amount: (self.ammount*100) as i64,
+                            currency: Currency::SEK,
+                            ..Default::default()
+                        }
+                    ),
+                    tax_behavior: Some(CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior::Inclusive),
+                    tax_code: Some("txcd_92010001".into()),
+                    type_ : Some(CreateCheckoutSessionShippingOptionsShippingRateDataType::FixedAmount) ,
+                    ..Default::default()
+                },
+
+            ),
+            shipping_rate: None,
+        }
+    }
+}
+
+
 
 
 
@@ -107,6 +163,30 @@ pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
 
     let items = sjf_db::checkout::get_order(&uuid).await?;
 
+
+
+    let shipping_price =
+    {
+        let total_order_quantity = items.iter().map(|i| i.ordered_quantity).fold(0, |acc,i| acc+i);
+        let total_order_price = items.iter().map(|i| i.price*i.ordered_quantity ).fold(0,|acc,i| acc+i);
+
+        let initial_price = match total_order_quantity{
+            0..=2 => 89,
+            3..=4 => 99,
+            5.. => 129
+        };
+
+        if total_order_price > 999 { 0 } else { initial_price }
+    };
+
+
+    let shipping_options = vec![
+        ShippingOption { maximum: 5, minimum: 2, ammount: shipping_price, display_name: "PostNord".into() }.to_stripe(),
+        ShippingOption { maximum: 5, minimum: 2, ammount: shipping_price, display_name: "Schenker".into() }.to_stripe(),
+    ];
+
+
+
     let metadata = {
         let mut map: HashMap<String,String> = HashMap::new();
         map.insert("reservation".into(), uuid.clone());
@@ -168,6 +248,7 @@ pub async fn checkout(uuid: String) -> Result<String,crate::PaymentError> {
         let cancel_url = format!("{}{}/{}",url,CANCLE_PATH,uuid);
         let success_url = format!("{}{}/{}",url,SUCCESS_PATH,uuid);
 
+        params.shipping_options = Some(shipping_options);
         params.cancel_url = Some(&cancel_url);
         params.success_url = Some(&success_url);
         params.client_reference_id = Some(uuid.as_ref());

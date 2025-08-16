@@ -345,9 +345,10 @@ pub async fn checkout(req: CheckoutRequest ) -> Result<String ,ServerFnError>
         },
         Ok(uuid) => {
 
-            match sjf_payment::checkout(uuid).await
+            match sjf_payment::checkout(uuid.clone()).await
             {
                 Err(e) => {
+                    let _ = db::checkout::undo_reservation(uuid).await;
                     error!("Checkout failed {}",e);
                     Err(ServerFnError::ServerError("Failed to create checkout session".into()))
                 },
