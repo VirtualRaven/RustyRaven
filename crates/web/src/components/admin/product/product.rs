@@ -283,11 +283,10 @@ fn ProductPrice(product: Signal<Product>) -> Element {
             }
             input {
                 type: "text",
-                value: "{product.read().price}kr",
+                value: "{product.read().price}",
                 oninput: move |evt| {
                     product.write().price = {
                         let value = evt.value();
-                        let value = value.strip_suffix("kr").unwrap_or(&value);
                         match value.parse::<u16>()
                         {
                             Ok(price) => price,
