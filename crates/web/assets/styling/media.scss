@@ -29,12 +29,44 @@ $layout-breakpoint-split: 1200px;
             min-width: 300px;
         }
     }
+    .product-highlight {
+        flex-wrap: wrap;
+        > div {width: unset !important; }
+        .info {
+            > h2, > h1 
+            {
+                margin:0.2rem !important;
+            }
+            padding:0.5rem !important;
+        }
+    }
+
 }
+
+@media (max-width: 650)
+{
+.product_preview 
+{
+    margin:0.2rem !important;
+}
+
+}
+
 @media (max-width: 600px)
 {
     header {
         ul.menu {
             padding: 2rem;
+        }
+    }
+}
+@media (max-width: 580px)
+{
+    .product_preview
+    {
+        width: 10rem !important;
+        .img_container {
+            height: 10rem !important;
         }
     }
 }
@@ -53,6 +85,25 @@ $layout-breakpoint-split: 1200px;
     header {
         ul.menu {
             padding: 1rem;
+        }
+    }
+    .product-highlight {
+        .info {
+            > h2, > h1 
+            {
+                font-size: medium;
+            }
+        }
+    }
+}
+@media (max-width: 430px)
+{
+    .product_preview
+    {
+        .footer {flex-wrap: wrap;}
+        width: 8rem !important;
+        .img_container {
+            height: 8rem !important;
         }
     }
 }
