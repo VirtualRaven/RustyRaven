@@ -14,10 +14,14 @@ spec:
     metadata:
       labels:
         app: sjf
+      annotations:
+        k8s.grafana.com/scrape: "true"
+        k8s.grafana.com/metrics.portName: "metrics-http"
+
     spec:
       containers:
       - name: sjf-server
-        image: virtualraven/sjf:0.13
+        image: virtualraven/sjf:0.19
         env:
           - name: "IP"
             value: "0.0.0.0"
@@ -75,6 +79,8 @@ spec:
         ports:
         - name: web-http
           containerPort: 80
+        - name: metrics-http
+          containerPort: 5533
         securityContext:  
           allowPrivilegeEscalation: false
           runAsUser: 9969
