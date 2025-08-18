@@ -197,7 +197,7 @@ mod metrics {
 async fn launch_server() {
     let res = dotenvy::dotenv();
 
-    dioxus::logger::init(dioxus::logger::tracing::Level::DEBUG).expect("failed to init logger");
+    dioxus::logger::init(dioxus::logger::tracing::Level::INFO).expect("failed to init logger");
 
     if let Ok(dot_env) = res {
         info!("Loaded {}", dot_env.to_string_lossy());
