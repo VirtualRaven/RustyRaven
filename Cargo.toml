@@ -13,6 +13,7 @@ once_cell = "1.21.3"
 dotenvy = {version="0.15.7"}
 axum-login = {version="0.16.0"}
 axum = {version="0.7.9"}
+axum-prometheus = {version="0.7.0", default-features=false, features=["prometheus"]}
 tokio = { version = "1"}
 
 [profile.wasm-dev]

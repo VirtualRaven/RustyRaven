@@ -59,9 +59,7 @@ fn HeaderFooter() -> Element {
 
     let mut cart_state = components::use_cart();
 
-    info!("Header");
     let _ = use_resource(move || async move {
-        info!("Header resource");
         if let Some(c) = CartState::load().await {
             cart_state.set(c);
         }
@@ -156,6 +154,46 @@ async fn order_middleware(request: Request, next: Next) -> Response {
 }
 
 #[cfg(feature = "server")]
+mod metrics {
+    use std::{net::SocketAddrV4, time::Duration};
+
+    use axum_prometheus::{metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle}, utils, Handle, PrometheusMetricLayer};
+
+    use super::*;
+
+    pub fn make_prometheus() -> (PrometheusMetricLayer<'static>, PrometheusHandle) {
+        let tmp_listen_addr: SocketAddrV4 = "0.0.0.0:0"
+            .parse()
+            .context("invalid temporary prometheus listen addr").unwrap();
+        let builder = PrometheusBuilder::new()
+            .with_http_listener(tmp_listen_addr)
+            .upkeep_timeout(Duration::from_secs(5));
+
+        let builder = builder
+            .set_buckets_for_metric(
+                Matcher::Full(
+                    axum_prometheus::PREFIXED_HTTP_REQUESTS_DURATION_SECONDS
+                        .get()
+                        .map_or(axum_prometheus::AXUM_HTTP_REQUESTS_DURATION_SECONDS, |s| s.as_str())
+                        .to_string(),
+                ),
+                utils::SECONDS_DURATION_BUCKETS,
+            )
+            .context("set buckets for prometheus metrics").unwrap();
+
+        let (recorder, _) = builder.build().context("build prometheus").unwrap();
+
+        let handle = recorder.handle();
+        let handle = Handle(handle);
+
+        axum_prometheus::metrics::set_global_recorder(recorder).expect("Failed to set global recorder");
+
+        PrometheusMetricLayer::pair_from(handle)
+    }
+
+}
+
+#[cfg(feature = "server")]
 async fn launch_server() {
     let res = dotenvy::dotenv();
 
@@ -195,11 +233,21 @@ async fn launch_server() {
     info!("Initializing dioxus...");
     // Connect to the IP and PORT env vars passed by the Dioxus CLI (or your dockerfile)
     let socket_addr = dioxus::cli_config::fullstack_address_or_localhost();
+    let metric_socket_addr = { 
+        let mut tmp = socket_addr.clone();
+        tmp.set_port(5533);
+        tmp
+    };
+
 
     info!("Hosting at {}", socket_addr);
 
     use axum::routing::get;
     use dioxus::fullstack::prelude::DioxusRouterExt;
+    use axum_prometheus::PrometheusMetricLayerBuilder;
+
+    use crate::metrics::make_prometheus;
+    let (prometheus_layer, metric_handle) =  make_prometheus();
 
     let dioxus_router = axum::Router::new()
         .serve_dioxus_application(ServeConfigBuilder::new(), App)
@@ -208,7 +256,10 @@ async fn launch_server() {
             sjf_auth::axum::protect_authenticated_routes,
         ))
         .layer(axum::Extension(sjf_auth::state::AuthState::new()))
-        .layer(sjf_auth::axum::create_auth_layer());
+        .layer(sjf_auth::axum::create_auth_layer())
+        .layer(prometheus_layer);
+
+
     let custom_router = axum::Router::new()
         .route(
             "/kubernetes/probes/liveness",
@@ -220,8 +271,20 @@ async fn launch_server() {
         .merge(custom_router)
         .merge(dioxus_router)
         .into_make_service();
+    
+    let metrics_router = axum::Router::new()
+        .route("/metrics", get(|| async move { metric_handle.render() }))
+        .into_make_service();
+
     let listener = tokio::net::TcpListener::bind(socket_addr).await.unwrap();
-    axum::serve(listener, router).await.unwrap();
+    let metrics_listener = tokio::net::TcpListener::bind(metric_socket_addr).await.unwrap();
+
+
+    let f1 = tokio::spawn(async move {    axum::serve(listener, router).await.unwrap(); } );
+    let f2 = tokio::spawn(async move {    axum::serve(metrics_listener, metrics_router).await.unwrap(); } );
+    let _ = tokio::join!(f1,f2);
+
+
 }
 
 #[component]

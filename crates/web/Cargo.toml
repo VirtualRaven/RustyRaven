@@ -30,8 +30,9 @@ serde_json = {version="1.0.142", optional=true}
 axum-login = {workspace=true, optional=true}
 webauthn-rs-proto = {version="0.5.2", optional=true}
 wasm-bindgen-futures = "0.4.50"
+axum-prometheus ={workspace=true,optional=true} 
 [features]
 default = ["web"]
 # The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
 web = ["dioxus/web", "dep:web-sys","dep:wasmtimer", "dep:serde_json", "dep:webauthn-rs-proto", "webauthn-rs-proto/wasm"]
-server = ["dioxus/server", "dep:dotenvy" , "dep:urlencoding", "dep:sjf_payment",  "dep:sjf_db","dep:futures", "dep:sjf_image", "dep:pretty_env_logger", "dep:tokio","dep:axum","dep:axum-login","dep:sjf_auth"]
+server = ["dioxus/server", "dep:axum-prometheus", "dep:dotenvy" , "dep:urlencoding", "dep:sjf_payment",  "dep:sjf_db","dep:futures", "dep:sjf_image", "dep:pretty_env_logger", "dep:tokio","dep:axum","dep:axum-login","dep:sjf_auth"]
