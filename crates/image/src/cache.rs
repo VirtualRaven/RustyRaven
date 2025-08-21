@@ -60,6 +60,7 @@ pub async fn add_image(id: ImageId, data: Vec<u8>) {
         },
     );
     enforce_size(&mut cache);
+    metrics::gauge!("image_cache_size").set(cache.cache_size as f64 );
 }
 
 async fn update_acces_time(id: ImageId, access_time: NaiveDateTime) {
@@ -74,9 +75,9 @@ async fn update_acces_time(id: ImageId, access_time: NaiveDateTime) {
 
 pub async fn get_image(id: ImageId) -> Option<Arc<Vec<u8>>> {
     let cache = CACHE.lock.read().await;
-
     match cache.images.get(&id) {
         Some(e) => {
+            metrics::counter!("image_cache_hits").increment(1);
             let res = e.data.clone();
 
             let now = Utc::now().naive_utc();
@@ -87,7 +88,10 @@ pub async fn get_image(id: ImageId) -> Option<Arc<Vec<u8>>> {
             }
             Some(res)
         }
-        None => None,
+        None => {
+            metrics::counter!("image_cache_misses").increment(1);
+            None
+        },
     }
 }
 

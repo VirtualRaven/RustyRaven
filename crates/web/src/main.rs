@@ -27,6 +27,7 @@ cfg_if::cfg_if! {
 use crate::components::{
     About, Auth, CartState, CategoryList, OrderCanceled, OrderCompleted, TermsAndConditions,
 };
+
 #[derive(Routable, PartialEq, Clone)]
 pub enum Route {
     #[layout(HeaderFooter)]
@@ -198,6 +199,10 @@ async fn launch_server() {
     let res = dotenvy::dotenv();
 
     dioxus::logger::init(dioxus::logger::tracing::Level::INFO).expect("failed to init logger");
+    
+    use axum_prometheus::PrometheusMetricLayerBuilder;
+    use crate::metrics::make_prometheus;
+    let (prometheus_layer, metric_handle) =  make_prometheus();
 
     if let Ok(dot_env) = res {
         info!("Loaded {}", dot_env.to_string_lossy());
@@ -244,28 +249,24 @@ async fn launch_server() {
 
     use axum::routing::get;
     use dioxus::fullstack::prelude::DioxusRouterExt;
-    use axum_prometheus::PrometheusMetricLayerBuilder;
-
-    use crate::metrics::make_prometheus;
-    let (prometheus_layer, metric_handle) =  make_prometheus();
 
     let dioxus_router = axum::Router::new()
+        .route("/images/:image_id}/:variant_id", get(handle_image_get))
         .serve_dioxus_application(ServeConfigBuilder::new(), App)
+        .layer(prometheus_layer)
         .layer(axum::middleware::from_fn(order_middleware))
         .layer(axum::middleware::from_fn(
             sjf_auth::axum::protect_authenticated_routes,
         ))
         .layer(axum::Extension(sjf_auth::state::AuthState::new()))
-        .layer(sjf_auth::axum::create_auth_layer())
-        .layer(prometheus_layer);
+        .layer(sjf_auth::axum::create_auth_layer());
 
 
     let custom_router = axum::Router::new()
         .route(
             "/kubernetes/probes/liveness",
             get(|| async { StatusCode::NO_CONTENT }),
-        )
-        .route("/images/:image_id}/:variant_id", get(handle_image_get));
+        );
 
     let router = axum::Router::new()
         .merge(custom_router)
@@ -296,6 +297,15 @@ fn App() -> Element {
 
 #[component]
 fn NotFound(segments: Vec<String>) -> Element {
+    server_only! {
+        let path : String = {
+            let ctx = server_context();
+            let req = ctx.request_parts();
+            req.uri.path().to_string()
+        };
+        let labels= [("endpoint",path)];
+        axum_prometheus::metrics::counter!("not_found_pages", &labels).increment(1);
+    }
     rsx! {
         h2 {
             "Oops! Sidan hittades inte :/"

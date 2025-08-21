@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT relname, reltuples AS estimate FROM pg_class \r\nwhere (\r\n    reltuples >= 0 and  \r\n    relname NOT LIKE 'pg_%' and \r\n    relname NOT LIKE 'sql\\_%'  \r\n    and relname NOT LIKE '%\\_pkey' \r\n    and relname NOT LIKE '%\\_id_seq' \r\n    and relname NOT LIKE '%\\_index'\r\n)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "relname",
+        "type_info": "Name"
+      },
+      {
+        "ordinal": 1,
+        "name": "estimate",
+        "type_info": "Float4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "3af8cb53f9d3ca7859d12ccd588fb5569d397cef15f4bb0c805db273e42f979b"
+}

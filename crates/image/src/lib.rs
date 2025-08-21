@@ -79,7 +79,7 @@ pub async fn get(id: ImageId) -> Option<Arc<Vec<u8>>> {
         None => match object_storage::get_image(id.clone()).await {
             Ok(d) => {
                 let rsp = Some(Arc::new(d.clone()));
-                tokio::spawn(async move { cache::add_image(id, d) });
+                tokio::spawn(async move { cache::add_image(id, d).await });
                 rsp
             }
             Err(e) => {

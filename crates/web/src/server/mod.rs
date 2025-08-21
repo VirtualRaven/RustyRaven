@@ -1,6 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
+#[cfg(feature = "server")]
+use axum_prometheus::metrics::counter;
+
 use dioxus::logger::tracing::{error, info, warn};
 use dioxus::prelude::server_fn::error::NoCustomError;
 use dioxus::prelude::server_fn::ServerFn;
@@ -154,7 +157,7 @@ pub async fn store_product(req: AuthenticatedRequest<Product>) -> Result<i32, Se
     }
 }
 
-#[server(endpoint="auth/images/uploead", input=Json)]
+#[server(endpoint="auth/images/upload", input=Json)]
 pub async fn upload_images(
     req: AuthenticatedRequest<Vec<Vec<u8>>>,
 ) -> Result<Vec<(u32, u32)>, ServerFnError> {
@@ -287,24 +290,30 @@ pub async fn get_category_and_product(
     }
 }
 
+
+const CHECKOUT_GAUGE: &str = "active_checkout_sessions";
 #[server(endpoint="checkout",input=dioxus::prelude::server_fn::codec::PostUrl)]
 pub async fn checkout(req: CheckoutRequest) -> Result<String, ServerFnError> {
     match db::checkout::make_reservation(req).await {
         Err(e) => {
             info!("Checkout failed {}", e);
+            counter!("reservation_failure").increment(1);
             Err(ServerFnError::ServerError(
                 "Product reservation failure".into(),
             ))
         }
+
+
         Ok(uuid) => match sjf_payment::checkout(uuid.clone()).await {
             Err(e) => {
+                counter!("checkout_failure").increment(1); 
                 let _ = db::checkout::undo_reservation(uuid).await;
                 error!("Checkout failed {}", e);
                 Err(ServerFnError::ServerError(
                     "Failed to create checkout session".into(),
                 ))
             }
-            Ok(s) => Ok(s),
+            Ok(s) => { counter!("checkout_session_created").increment(1);  Ok(s) },
         },
     }
 }

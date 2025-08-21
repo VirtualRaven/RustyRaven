@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "ANALYZE products,users,images,image_variants,pending_orders,product_categories,product_images, product_reservations",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "ba9cae58ab120f879284514c2595ae198972733ebeb542f3c17db2e35c552176"
+}

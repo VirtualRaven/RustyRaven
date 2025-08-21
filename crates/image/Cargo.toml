@@ -14,4 +14,5 @@ tracing = {workspace = true }
 aws-sdk-s3 = "1.98.0"
 thiserror = {workspace = true }
 dotenvy = {workspace=true }
+metrics = {workspace=true}
 
