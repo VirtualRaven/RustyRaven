@@ -1,32 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use stripe::{
-    CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession,
-    CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData,
-    CreateCheckoutSessionLineItemsPriceDataProductData,
-    CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData,
-    CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection,
-    CreateCheckoutSessionShippingAddressCollectionAllowedCountries,
-    CreateCheckoutSessionShippingOptions, CreateCheckoutSessionShippingOptionsShippingRateData,
-    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate,
-    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum,
-    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit,
-    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum,
-    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit,
-    CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount,
-    CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior,
-    CreateCheckoutSessionShippingOptionsShippingRateDataType, CreateCustomer, CreatePrice,
-    CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, Price,
-    Product, TaxRate, TaxRateId,
-    generated::{billing::tax_rate, core::tax_code},
+    generated::{billing::tax_rate, core::tax_code}, CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession, CreateCheckoutSessionCustomFields, CreateCheckoutSessionCustomFieldsDropdown, CreateCheckoutSessionCustomFieldsDropdownOptions, CreateCheckoutSessionCustomFieldsLabel, CreateCheckoutSessionCustomFieldsType, CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData, CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData, CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection, CreateCheckoutSessionShippingAddressCollectionAllowedCountries, CreateCheckoutSessionShippingOptions, CreateCheckoutSessionShippingOptionsShippingRateData, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount, CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior, CreateCheckoutSessionShippingOptionsShippingRateDataType, CreateCustomer, CreatePrice, CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, OrderItem, Price, Product, TaxRate, TaxRateId
 };
 use tracing::info;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAJOR_VERSION: &str = env!("CARGO_PKG_VERSION_MAJOR");
 const NAME: &str = env!("CARGO_PKG_NAME");
-pub const CANCLE_PATH: &str = "/order/avbruten";
-pub const SUCCESS_PATH: &str = "/order/klar";
 
 fn client() -> ::stripe::Client {
     let secret_key = dotenvy::var("STRIPE_API_KEY").expect("Missing STRIPE_API_KEY");
@@ -35,56 +16,56 @@ fn client() -> ::stripe::Client {
     client
 }
 
-struct ShippingOption {
-    maximum: u32,
-    minimum: u32,
-    ammount: u32,
-    display_name: String,
-}
+//struct ShippingOption {
+//    maximum: u32,
+//    minimum: u32,
+//    ammount: u32,
+//    display_name: String,
+//}
 
-impl ShippingOption {
-    fn to_stripe(&self) -> CreateCheckoutSessionShippingOptions {
-        CreateCheckoutSessionShippingOptions {
-            shipping_rate_data: Some(
-                CreateCheckoutSessionShippingOptionsShippingRateData {
-                    delivery_estimate: Some(
-                            CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate
-                            {
-                                maximum: Some(
-                                    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum
-                                    {
-                                        value: self.maximum as i64,
-                                        unit: CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit::BusinessDay
-                                    }
-                                ),
-                                minimum: Some(
-                                    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum
-                                    {
-                                        value: self.minimum as i64,
-                                        unit: CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit::BusinessDay
-                                    }
-                                )
-                            }
-                        ),
-                    display_name: self.display_name.clone(),
-                    fixed_amount: Some(
-                        CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount {
-                            amount: (self.ammount*100) as i64,
-                            currency: Currency::SEK,
-                            ..Default::default()
-                        }
-                    ),
-                    tax_behavior: Some(CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior::Inclusive),
-                    tax_code: Some("txcd_92010001".into()),
-                    type_ : Some(CreateCheckoutSessionShippingOptionsShippingRateDataType::FixedAmount) ,
-                    ..Default::default()
-                },
-
-            ),
-            shipping_rate: None,
-        }
-    }
-}
+//impl ShippingOption {
+//    fn to_stripe(&self) -> CreateCheckoutSessionShippingOptions {
+//        CreateCheckoutSessionShippingOptions {
+//            shipping_rate_data: Some(
+//                CreateCheckoutSessionShippingOptionsShippingRateData {
+//                    delivery_estimate: Some(
+//                            CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate
+//                            {
+//                                maximum: Some(
+//                                    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum
+//                                    {
+//                                        value: self.maximum as i64,
+//                                        unit: CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit::BusinessDay
+//                                    }
+//                                ),
+//                                minimum: Some(
+//                                    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum
+//                                    {
+//                                        value: self.minimum as i64,
+//                                        unit: CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit::BusinessDay
+//                                    }
+//                                )
+//                            }
+//                        ),
+//                    display_name: self.display_name.clone(),
+//                    fixed_amount: Some(
+//                        CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount {
+//                            amount: (self.ammount*100) as i64,
+//                            currency: Currency::SEK,
+//                            ..Default::default()
+//                        }
+//                    ),
+//                    tax_behavior: Some(CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior::Inclusive),
+//                    tax_code: Some("txcd_92010001".into()),
+//                    type_ : Some(CreateCheckoutSessionShippingOptionsShippingRateDataType::FixedAmount) ,
+//                    ..Default::default()
+//                },
+//
+//            ),
+//            shipping_rate: None,
+//        }
+//    }
+//}
 
 use once_cell::sync::OnceCell;
 static TAX_RATES: OnceCell<BTreeMap<u8, TaxRateId>> = OnceCell::new();
@@ -147,48 +128,67 @@ async fn create_swedish_tax_rates() -> Result<(), crate::PaymentError> {
 pub async fn checkout(uuid: String) -> Result<String, crate::PaymentError> {
     let url = SITE_URL.get().unwrap();
     let client = client();
+    
+    let items = {
 
-    let items = sjf_db::checkout::get_order(&uuid).await?;
+        let mut items = sjf_db::checkout::get_order(&uuid).await?;
+        let shipping_price = {
+            let total_order_quantity = items
+                .iter()
+                .map(|i| i.ordered_quantity)
+                .fold(0, |acc, i| acc + i);
+            let total_order_price = items
+                .iter()
+                .map(|i| i.price * i.ordered_quantity)
+                .fold(0, |acc, i| acc + i);
 
-    let shipping_price = {
-        let total_order_quantity = items
-            .iter()
-            .map(|i| i.ordered_quantity)
-            .fold(0, |acc, i| acc + i);
-        let total_order_price = items
-            .iter()
-            .map(|i| i.price * i.ordered_quantity)
-            .fold(0, |acc, i| acc + i);
+            let initial_price = match total_order_quantity {
+                0..=2 => 89,
+                3..=4 => 99,
+                5.. => 129,
+            };
 
-        let initial_price = match total_order_quantity {
-            0..=2 => 89,
-            3..=4 => 99,
-            5.. => 129,
+            if total_order_price > 999 {
+                0
+            } else {
+                initial_price
+            }
         };
+        
+        items.push(
+            sjf_db::checkout::OrderItem {
+                product_id: 0,
+                image_path: None,
+                name: "Frakt".into(),
+                price: shipping_price,
+                ordered_quantity: 1,
+                tax_rate:25,
+            }
+        );
 
-        if total_order_price > 999 {
-            0
-        } else {
-            initial_price
-        }
+        items
     };
 
-    let shipping_options = vec![
-        ShippingOption {
-            maximum: 5,
-            minimum: 2,
-            ammount: shipping_price,
-            display_name: "PostNord".into(),
-        }
-        .to_stripe(),
-        ShippingOption {
-            maximum: 5,
-            minimum: 2,
-            ammount: shipping_price,
-            display_name: "Schenker".into(),
-        }
-        .to_stripe(),
-    ];
+
+    
+
+
+    //let shipping_options = vec![
+    //    ShippingOption {
+    //        maximum: 5,
+    //        minimum: 2,
+    //        ammount: shipping_price,
+    //        display_name: "PostNord".into(),
+    //    }
+    //    .to_stripe(),
+    //    ShippingOption {
+    //        maximum: 5,
+    //        minimum: 2,
+    //        ammount: shipping_price,
+    //        display_name: "Schenker".into(),
+    //    }
+    //    .to_stripe(),
+    //];
 
     let metadata = {
         let mut map: HashMap<String, String> = HashMap::new();
@@ -253,10 +253,10 @@ pub async fn checkout(uuid: String) -> Result<String, crate::PaymentError> {
     let checkout_session = {
         let mut params = CreateCheckoutSession::new();
 
-        let cancel_url = format!("{}{}/{}", url, CANCLE_PATH, uuid);
-        let success_url = format!("{}{}/{}", url, SUCCESS_PATH, uuid);
+        let cancel_url = format!("{}{}/{}", url, sjf_api::payment::CANCLE_PATH, uuid);
+        let success_url = format!("{}{}/{}", url, sjf_api::payment::SUCCESS_PATH, uuid);
 
-        params.shipping_options = Some(shipping_options);
+        //params.shipping_options = Some(shipping_options);
         params.cancel_url = Some(&cancel_url);
         params.success_url = Some(&success_url);
         params.client_reference_id = Some(uuid.as_ref());
@@ -274,6 +274,32 @@ pub async fn checkout(uuid: String) -> Result<String, crate::PaymentError> {
             ],
         });
 
+        params.custom_fields = Some(vec![
+            CreateCheckoutSessionCustomFields{
+                dropdown: Some(
+                    CreateCheckoutSessionCustomFieldsDropdown {
+                        options: vec![
+                            CreateCheckoutSessionCustomFieldsDropdownOptions {
+                                label: "PostNord".into(),
+                                value: "PostNord".into()
+                            },
+                            CreateCheckoutSessionCustomFieldsDropdownOptions {
+                                label: "Schenker".into(),
+                                value: "Schenker".into()
+                            }
+                        ]
+                    }
+                ),
+                label: CreateCheckoutSessionCustomFieldsLabel{
+                    custom: "Frakt alternativ".into(),
+                    type_: stripe::CreateCheckoutSessionCustomFieldsLabelType::Custom
+                },
+                key: "selected_shipping_option".into(),
+                optional: Some(false),
+                type_: CreateCheckoutSessionCustomFieldsType::Dropdown,
+                ..Default::default()
+            }
+        ]);
         params.billing_address_collection =
             Some(stripe::CheckoutSessionBillingAddressCollection::Auto);
 

@@ -4679,6 +4679,7 @@ dependencies = [
  "dotenvy",
  "futures-util",
  "once_cell",
+ "sjf_api",
  "sjf_db",
  "thiserror 2.0.14",
  "tracing",

@@ -10,4 +10,5 @@ thiserror = {workspace = true }
 futures-util = {workspace=true}
 once_cell = {workspace=true}
 sjf_db = {path="../db"}
+sjf_api = {path="../api"}
 dotenvy = {workspace=true }

@@ -7,6 +7,7 @@ use sjf_api::{
     checkout::CheckoutRequest,
     product::{Product, ProductId},
 };
+use dioxus::logger::tracing::warn;
 
 const CART_ICON: Asset = asset!("/assets/cart.png");
 
@@ -59,6 +60,17 @@ impl CartState {
     #[cfg(feature = "web")]
     pub async fn load() -> Option<Self> {
         use dioxus::logger::tracing::info;
+        use web_sys::window;
+
+        if window().map(|w| w.location().pathname().unwrap_or_default() ).unwrap_or_default().starts_with(sjf_api::payment::SUCCESS_PATH)
+        {
+            let r = Self::get_storage().map( |s| s.remove_item(&cart_name()));
+            match r {
+                Some(Ok(())) => (),
+                Some(Err(_)) => warn!("Failed to clear cart"),
+                None => warn!("Failed to get storage to clear cart")
+            }
+        }
 
         let unserialize = || {
             if let Some(storage) = Self::get_storage() {

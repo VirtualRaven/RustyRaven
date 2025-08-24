@@ -2,13 +2,6 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn OrderCompleted(uuid: ReadOnlySignal<String>) -> Element {
-    let mut cart_state = crate::components::cart::use_cart();
-    let _ = use_resource(move || async move {
-        let _ = uuid.read();
-        cart_state.with_mut(|cart| {
-            cart.clear();
-        });
-    });
 
     rsx! {
         div {

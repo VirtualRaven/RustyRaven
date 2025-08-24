@@ -1,7 +1,8 @@
 use ::stripe::Client;
 
 mod stripe;
-pub use stripe::{CANCLE_PATH, SUCCESS_PATH, checkout, init};
+pub use stripe::{checkout, init};
+pub use sjf_api::payment::{CANCLE_PATH,SUCCESS_PATH};
 
 #[derive(thiserror::Error, Debug)]
 pub enum PaymentError {
