@@ -11,14 +11,14 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sjf-website
+  name: sjf-demo
   annotations:
     cert-manager.io/cluster-issuer: digitalocean-dns01
     traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect@kubernetescrd
 
 spec:
   rules:
-    - host: sjf.demo.rahmn.net
+    - host: demo.sjfconcept.se
       http:
         paths:
           - path: /
@@ -30,5 +30,5 @@ spec:
                   number: 80
   tls: 
   - hosts:
-    - sjf.demo.rahmn.net
-    secretName: ingress-cert
+    - demo.sjfconcept.se
+    secretName: demo-ingress-cert
