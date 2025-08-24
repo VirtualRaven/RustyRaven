@@ -33,8 +33,6 @@ a {
     padding:2rem;
 }
 
-
-
 .close-container {
     $size: 40px;
     $width:  $size;
@@ -165,6 +163,7 @@ button.green {
             > img {
                 max-width: 100%;
                 max-height: 100%;
+
             }
         }
     }
@@ -183,6 +182,44 @@ button.green {
                     width:40%;
                     &:nth-child(1), &:nth-child(3)
                     {
+                        position: relative;
+                        & > div 
+                        {
+                                position: absolute;
+                                background-color: white;
+                                opacity: 0.8;
+                                text-align: left;
+                                &:before,
+                                &:after {
+                                	content: '';
+                                	position: absolute;
+                                    background-color: inherit;
+                                }
+                                &,
+                                &:before,
+                                &:after {
+                                	width:  2em;
+                                	height: 2em;
+                                	border-top-right-radius: 30%;
+                                }
+                                & {
+                                	transform: rotate(-150deg) skewX(-30deg) scale(1,.866);
+                                }
+                                &:before {
+                                	transform: rotate(-135deg) skewX(-45deg) scale(1.414,.707) translate(0,-50%);
+                                }
+                                &:after {
+                                	transform: rotate(135deg) skewY(-45deg) scale(.707,1.414) translate(50%);
+                                }
+                                top: calc( 50% ) ;
+                                left: 2rem;
+                        }
+                        &:nth-child(3) > div
+                        {
+                            left: unset;
+                            right: 2rem;
+                            transform: rotate(30deg) skewX(-30deg) scale(1,.866);
+                        }
                         cursor: pointer;
                         width: 30%;
                     }
@@ -378,8 +415,21 @@ button.green {
     font-size: large;
     transform: scaleY(0);
     transform-origin: top;
+    background-color: defines.$mainbright;
+    color: white;
     transition: transform 0.1s ease-in-out;
     &.visible {
         transform: scaleY(1);
+    }
+}
+
+.payment-options 
+{
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    flex-wrap: wrap;
+    img {
+        width: 4rem;
     }
 }

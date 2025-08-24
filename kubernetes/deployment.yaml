@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: sjf-server
-        image: virtualraven/sjf:0.19
+        image: virtualraven/sjf:0.22
         env:
           - name: "IP"
             value: "0.0.0.0"
@@ -37,18 +37,23 @@ spec:
           - name: S3_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
-                name: minio-user
+                name: garage-user
                 key: CONSOLE_ACCESS_KEY
           - name: S3_SECRET_ACCESS_KEY 
             valueFrom:
               secretKeyRef:
-                name: minio-user
+                name: garage-user
                 key: CONSOLE_SECRET_KEY
           - name: OBJECT_STORAGE_URI
             valueFrom:
               secretKeyRef:
-                name: minio-user
+                name: garage-user
                 key: uri
+          - name: S3_REGION
+            valueFrom:
+              secretKeyRef:
+                name: garage-user
+                key: region
           - name: STRIPE_API_KEY
             valueFrom:
               secretKeyRef:

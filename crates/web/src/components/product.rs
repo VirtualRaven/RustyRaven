@@ -50,7 +50,8 @@ pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> El
                                     let new_image = (*images.read()).get(new_index).unwrap().clone();
                                     (new_index,new_image)
                                 };
-                            } 
+                            },
+                            div {}
                         }
                         div {}
                         div {
@@ -68,10 +69,9 @@ pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> El
                                     let new_image = (*images.read()).get(new_index).unwrap().clone();
                                     (new_index,new_image)
                                 };
-                            } 
-
-
-                        }
+                            } ,
+                            div {}
+                        },
                     }
                     img {
                         srcset: "{selected_image().1.srcset().unwrap() }"

@@ -354,3 +354,4 @@ fn ProductPage(segments: ReadOnlySignal<Vec<String>>) -> Element {
         },
     }
 }
+
