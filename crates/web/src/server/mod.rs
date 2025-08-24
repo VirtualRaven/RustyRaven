@@ -196,7 +196,7 @@ pub async fn get_previews(
         recursive: r,
         category: p,
         limit: std::cmp::min(100, limit),
-        random
+        random,
     };
     error_logger(db::product::get_previews(r).await)
 }
@@ -292,7 +292,6 @@ pub async fn get_category_and_product(
     }
 }
 
-
 const CHECKOUT_GAUGE: &str = "active_checkout_sessions";
 #[server(endpoint="checkout",input=dioxus::prelude::server_fn::codec::PostUrl)]
 pub async fn checkout(req: CheckoutRequest) -> Result<String, ServerFnError> {
@@ -305,17 +304,19 @@ pub async fn checkout(req: CheckoutRequest) -> Result<String, ServerFnError> {
             ))
         }
 
-
         Ok(uuid) => match sjf_payment::checkout(uuid.clone()).await {
             Err(e) => {
-                counter!("checkout_failure").increment(1); 
+                counter!("checkout_failure").increment(1);
                 let _ = db::checkout::undo_reservation(uuid).await;
                 error!("Checkout failed {}", e);
                 Err(ServerFnError::ServerError(
                     "Failed to create checkout session".into(),
                 ))
             }
-            Ok(s) => { counter!("checkout_session_created").increment(1);  Ok(s) },
+            Ok(s) => {
+                counter!("checkout_session_created").increment(1);
+                Ok(s)
+            }
         },
     }
 }

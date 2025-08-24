@@ -66,13 +66,12 @@ fn HeaderFooter() -> Element {
         }
     });
 
-    let has_items = use_memo(move || !cart_state.read().is_empty() );
+    let has_items = use_memo(move || !cart_state.read().is_empty());
 
     let banner_class = {
         if has_items() {
             "banner visible"
-        }   
-        else {
+        } else {
             "banner"
         }
     };
@@ -173,14 +172,18 @@ async fn order_middleware(request: Request, next: Next) -> Response {
 mod metrics {
     use std::{net::SocketAddrV4, time::Duration};
 
-    use axum_prometheus::{metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle}, utils, Handle, PrometheusMetricLayer};
+    use axum_prometheus::{
+        metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle},
+        utils, Handle, PrometheusMetricLayer,
+    };
 
     use super::*;
 
     pub fn make_prometheus() -> (PrometheusMetricLayer<'static>, PrometheusHandle) {
         let tmp_listen_addr: SocketAddrV4 = "0.0.0.0:0"
             .parse()
-            .context("invalid temporary prometheus listen addr").unwrap();
+            .context("invalid temporary prometheus listen addr")
+            .unwrap();
         let builder = PrometheusBuilder::new()
             .with_http_listener(tmp_listen_addr)
             .upkeep_timeout(Duration::from_secs(5));
@@ -190,23 +193,26 @@ mod metrics {
                 Matcher::Full(
                     axum_prometheus::PREFIXED_HTTP_REQUESTS_DURATION_SECONDS
                         .get()
-                        .map_or(axum_prometheus::AXUM_HTTP_REQUESTS_DURATION_SECONDS, |s| s.as_str())
+                        .map_or(axum_prometheus::AXUM_HTTP_REQUESTS_DURATION_SECONDS, |s| {
+                            s.as_str()
+                        })
                         .to_string(),
                 ),
                 utils::SECONDS_DURATION_BUCKETS,
             )
-            .context("set buckets for prometheus metrics").unwrap();
+            .context("set buckets for prometheus metrics")
+            .unwrap();
 
         let (recorder, _) = builder.build().context("build prometheus").unwrap();
 
         let handle = recorder.handle();
         let handle = Handle(handle);
 
-        axum_prometheus::metrics::set_global_recorder(recorder).expect("Failed to set global recorder");
+        axum_prometheus::metrics::set_global_recorder(recorder)
+            .expect("Failed to set global recorder");
 
         PrometheusMetricLayer::pair_from(handle)
     }
-
 }
 
 #[cfg(feature = "server")]
@@ -214,10 +220,10 @@ async fn launch_server() {
     let res = dotenvy::dotenv();
 
     dioxus::logger::init(dioxus::logger::tracing::Level::INFO).expect("failed to init logger");
-    
-    use axum_prometheus::PrometheusMetricLayerBuilder;
+
     use crate::metrics::make_prometheus;
-    let (prometheus_layer, metric_handle) =  make_prometheus();
+    use axum_prometheus::PrometheusMetricLayerBuilder;
+    let (prometheus_layer, metric_handle) = make_prometheus();
 
     if let Ok(dot_env) = res {
         info!("Loaded {}", dot_env.to_string_lossy());
@@ -253,12 +259,11 @@ async fn launch_server() {
     info!("Initializing dioxus...");
     // Connect to the IP and PORT env vars passed by the Dioxus CLI (or your dockerfile)
     let socket_addr = dioxus::cli_config::fullstack_address_or_localhost();
-    let metric_socket_addr = { 
+    let metric_socket_addr = {
         let mut tmp = socket_addr.clone();
         tmp.set_port(5533);
         tmp
     };
-
 
     info!("Hosting at {}", socket_addr);
 
@@ -276,31 +281,32 @@ async fn launch_server() {
         .layer(axum::Extension(sjf_auth::state::AuthState::new()))
         .layer(sjf_auth::axum::create_auth_layer());
 
-
-    let custom_router = axum::Router::new()
-        .route(
-            "/kubernetes/probes/liveness",
-            get(|| async { StatusCode::NO_CONTENT }),
-        );
+    let custom_router = axum::Router::new().route(
+        "/kubernetes/probes/liveness",
+        get(|| async { StatusCode::NO_CONTENT }),
+    );
 
     let router = axum::Router::new()
         .merge(custom_router)
         .merge(dioxus_router)
         .into_make_service();
-    
+
     let metrics_router = axum::Router::new()
         .route("/metrics", get(|| async move { metric_handle.render() }))
         .into_make_service();
 
     let listener = tokio::net::TcpListener::bind(socket_addr).await.unwrap();
-    let metrics_listener = tokio::net::TcpListener::bind(metric_socket_addr).await.unwrap();
+    let metrics_listener = tokio::net::TcpListener::bind(metric_socket_addr)
+        .await
+        .unwrap();
 
-
-    let f1 = tokio::spawn(async move {    axum::serve(listener, router).await.unwrap(); } );
-    let f2 = tokio::spawn(async move {    axum::serve(metrics_listener, metrics_router).await.unwrap(); } );
-    let _ = tokio::join!(f1,f2);
-
-
+    let f1 = tokio::spawn(async move {
+        axum::serve(listener, router).await.unwrap();
+    });
+    let f2 = tokio::spawn(async move {
+        axum::serve(metrics_listener, metrics_router).await.unwrap();
+    });
+    let _ = tokio::join!(f1, f2);
 }
 
 #[component]
@@ -354,4 +360,3 @@ fn ProductPage(segments: ReadOnlySignal<Vec<String>>) -> Element {
         },
     }
 }
-

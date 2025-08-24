@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> Element {
-    let mut selected_image = use_signal(|| (0usize,images().first().unwrap().clone()) );
+    let mut selected_image = use_signal(|| (0usize, images().first().unwrap().clone()));
 
     rsx! {
         div {

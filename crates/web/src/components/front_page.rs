@@ -47,23 +47,20 @@ pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element {
 fn Latest() -> Element {
     let mut refresh_counter = use_signal(|| 0u32);
 
-    use_future( move || 
-        async move {
-            loop {
-                info!("Waiting for refresh...");
-                wasmtimer::tokio::sleep(std::time::Duration::from_secs(10)).await;
-                info!("Refreshing");
-                refresh_counter.with_mut(|v|  *v+1);
-            }
+    use_future(move || async move {
+        loop {
+            info!("Waiting for refresh...");
+            wasmtimer::tokio::sleep(std::time::Duration::from_secs(10)).await;
+            info!("Refreshing");
+            refresh_counter.with_mut(|v| *v + 1);
         }
-    );
+    });
 
     let previews: Resource<
         Result<(sjf_api::product::GetPreviewsResp, Preview, Image), ServerFnError>,
     > = use_resource(move || async move {
-
         let _ = refresh_counter.read();
-        let res = server::get_previews(None, true, 12,true).await?;
+        let res = server::get_previews(None, true, 12, true).await?;
 
         use rand::distr::Distribution;
         let mut rng = rand::rng();

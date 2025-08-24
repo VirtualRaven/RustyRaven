@@ -162,16 +162,19 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp, sq
     }
 
     let q = {
-        if req.random
-        {
-            query_file_as!(T, "sql/get_previews_random.sql", &categories, req.limit as i32)
+        if req.random {
+            query_file_as!(
+                T,
+                "sql/get_previews_random.sql",
+                &categories,
+                req.limit as i32
+            )
             .fetch_all(POOL.get().unwrap())
             .await?
-        }
-        else {
+        } else {
             query_file_as!(T, "sql/get_previews.sql", &categories, req.limit as i32)
-            .fetch_all(POOL.get().unwrap())
-            .await?
+                .fetch_all(POOL.get().unwrap())
+                .await?
         }
     };
 

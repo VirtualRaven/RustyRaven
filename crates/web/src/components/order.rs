@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn OrderCompleted(uuid: ReadOnlySignal<String>) -> Element {
-
     rsx! {
         div {
             class: "about",

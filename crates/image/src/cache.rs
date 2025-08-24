@@ -60,7 +60,7 @@ pub async fn add_image(id: ImageId, data: Vec<u8>) {
         },
     );
     enforce_size(&mut cache);
-    metrics::gauge!("image_cache_size").set(cache.cache_size as f64 );
+    metrics::gauge!("image_cache_size").set(cache.cache_size as f64);
 }
 
 async fn update_acces_time(id: ImageId, access_time: NaiveDateTime) {
@@ -91,7 +91,7 @@ pub async fn get_image(id: ImageId) -> Option<Arc<Vec<u8>>> {
         None => {
             metrics::counter!("image_cache_misses").increment(1);
             None
-        },
+        }
     }
 }
 

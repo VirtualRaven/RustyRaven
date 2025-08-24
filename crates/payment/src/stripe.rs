@@ -1,7 +1,26 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use stripe::{
-    generated::{billing::tax_rate, core::tax_code}, CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession, CreateCheckoutSessionCustomFields, CreateCheckoutSessionCustomFieldsDropdown, CreateCheckoutSessionCustomFieldsDropdownOptions, CreateCheckoutSessionCustomFieldsLabel, CreateCheckoutSessionCustomFieldsType, CreateCheckoutSessionLineItems, CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData, CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData, CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection, CreateCheckoutSessionShippingAddressCollectionAllowedCountries, CreateCheckoutSessionShippingOptions, CreateCheckoutSessionShippingOptionsShippingRateData, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum, CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit, CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount, CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior, CreateCheckoutSessionShippingOptionsShippingRateDataType, CreateCustomer, CreatePrice, CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates, OrderItem, Price, Product, TaxRate, TaxRateId
+    CheckoutSession, CheckoutSessionMode, Client, CreateCheckoutSession,
+    CreateCheckoutSessionCustomFields, CreateCheckoutSessionCustomFieldsDropdown,
+    CreateCheckoutSessionCustomFieldsDropdownOptions, CreateCheckoutSessionCustomFieldsLabel,
+    CreateCheckoutSessionCustomFieldsType, CreateCheckoutSessionLineItems,
+    CreateCheckoutSessionLineItemsPriceData, CreateCheckoutSessionLineItemsPriceDataProductData,
+    CreateCheckoutSessionLineItemsPriceDataTaxBehavior, CreateCheckoutSessionPaymentIntentData,
+    CreateCheckoutSessionPhoneNumberCollection, CreateCheckoutSessionShippingAddressCollection,
+    CreateCheckoutSessionShippingAddressCollectionAllowedCountries,
+    CreateCheckoutSessionShippingOptions, CreateCheckoutSessionShippingOptionsShippingRateData,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimate,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximum,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMaximumUnit,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimum,
+    CreateCheckoutSessionShippingOptionsShippingRateDataDeliveryEstimateMinimumUnit,
+    CreateCheckoutSessionShippingOptionsShippingRateDataFixedAmount,
+    CreateCheckoutSessionShippingOptionsShippingRateDataTaxBehavior,
+    CreateCheckoutSessionShippingOptionsShippingRateDataType, CreateCustomer, CreatePrice,
+    CreateProduct, CreateTaxRate, Currency, Customer, Expandable, IdOrCreate, ListTaxRates,
+    OrderItem, Price, Product, TaxRate, TaxRateId,
+    generated::{billing::tax_rate, core::tax_code},
 };
 use tracing::info;
 
@@ -128,9 +147,8 @@ async fn create_swedish_tax_rates() -> Result<(), crate::PaymentError> {
 pub async fn checkout(uuid: String) -> Result<String, crate::PaymentError> {
     let url = SITE_URL.get().unwrap();
     let client = client();
-    
-    let items = {
 
+    let items = {
         let mut items = sjf_db::checkout::get_order(&uuid).await?;
         let shipping_price = {
             let total_order_quantity = items
@@ -154,24 +172,18 @@ pub async fn checkout(uuid: String) -> Result<String, crate::PaymentError> {
                 initial_price
             }
         };
-        
-        items.push(
-            sjf_db::checkout::OrderItem {
-                product_id: 0,
-                image_path: None,
-                name: "Frakt".into(),
-                price: shipping_price,
-                ordered_quantity: 1,
-                tax_rate:25,
-            }
-        );
+
+        items.push(sjf_db::checkout::OrderItem {
+            product_id: 0,
+            image_path: None,
+            name: "Frakt".into(),
+            price: shipping_price,
+            ordered_quantity: 1,
+            tax_rate: 25,
+        });
 
         items
     };
-
-
-    
-
 
     //let shipping_options = vec![
     //    ShippingOption {
@@ -274,32 +286,28 @@ pub async fn checkout(uuid: String) -> Result<String, crate::PaymentError> {
             ],
         });
 
-        params.custom_fields = Some(vec![
-            CreateCheckoutSessionCustomFields{
-                dropdown: Some(
-                    CreateCheckoutSessionCustomFieldsDropdown {
-                        options: vec![
-                            CreateCheckoutSessionCustomFieldsDropdownOptions {
-                                label: "PostNord".into(),
-                                value: "PostNord".into()
-                            },
-                            CreateCheckoutSessionCustomFieldsDropdownOptions {
-                                label: "Schenker".into(),
-                                value: "Schenker".into()
-                            }
-                        ]
-                    }
-                ),
-                label: CreateCheckoutSessionCustomFieldsLabel{
-                    custom: "Frakt alternativ".into(),
-                    type_: stripe::CreateCheckoutSessionCustomFieldsLabelType::Custom
-                },
-                key: "selected_shipping_option".into(),
-                optional: Some(false),
-                type_: CreateCheckoutSessionCustomFieldsType::Dropdown,
-                ..Default::default()
-            }
-        ]);
+        params.custom_fields = Some(vec![CreateCheckoutSessionCustomFields {
+            dropdown: Some(CreateCheckoutSessionCustomFieldsDropdown {
+                options: vec![
+                    CreateCheckoutSessionCustomFieldsDropdownOptions {
+                        label: "PostNord".into(),
+                        value: "PostNord".into(),
+                    },
+                    CreateCheckoutSessionCustomFieldsDropdownOptions {
+                        label: "Schenker".into(),
+                        value: "Schenker".into(),
+                    },
+                ],
+            }),
+            label: CreateCheckoutSessionCustomFieldsLabel {
+                custom: "Frakt alternativ".into(),
+                type_: stripe::CreateCheckoutSessionCustomFieldsLabelType::Custom,
+            },
+            key: "selected_shipping_option".into(),
+            optional: Some(false),
+            type_: CreateCheckoutSessionCustomFieldsType::Dropdown,
+            ..Default::default()
+        }]);
         params.billing_address_collection =
             Some(stripe::CheckoutSessionBillingAddressCollection::Auto);
 
