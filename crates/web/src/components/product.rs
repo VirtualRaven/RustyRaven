@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> Element {
-    let mut selected_image = use_signal(|| images().first().unwrap().clone());
+    let mut selected_image = use_signal(|| (0usize,images().first().unwrap().clone()) );
 
     rsx! {
         div {
@@ -12,12 +12,12 @@ pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> El
                 div {
                     class: "preview",
                     div {
-                        for image in images()
+                        for (index,image) in images().iter().enumerate()
                         {
                             div {
                                 class: "image_container",
                                 onclick: { to_owned![image]; move |_| {
-                                    *selected_image.write() = image.clone();
+                                    *selected_image.write() = (index,image.clone());
                                 }},
                                 key: "{image.sizes.first().unwrap().url}",
                                 style: "background-color: #{image.color}",
@@ -33,9 +33,48 @@ pub fn ProductImages(images: ReadOnlySignal<Vec<sjf_api::product::Image>>) -> El
                 class: "main",
                 div {
                     class: "image_container",
-                    style: "background-color: #{selected_image().color}",
+                    style: "background-color: #{selected_image().1.color}",
+                    div {
+                        class: "overlay",
+                        div {
+                            onclick: move |_| {
+                                let (index, _) = *selected_image.read();
+                                let new_index = {
+                                    match index {
+                                        0 => images.read().len()-1,
+                                        i => i-1
+                                    }
+                                };
+
+                                *selected_image.write() = {
+                                    let new_image = (*images.read()).get(new_index).unwrap().clone();
+                                    (new_index,new_image)
+                                };
+                            } 
+                        }
+                        div {}
+                        div {
+                            onclick: move |_| {
+                                let (index, _) = *selected_image.read();
+                                let new_index = {
+                                    let max_len = images.read().len()-1;
+                                    match index {
+                                        i if i == max_len => 0,
+                                        i => i+1
+                                    }
+                                };
+
+                                *selected_image.write() = {
+                                    let new_image = (*images.read()).get(new_index).unwrap().clone();
+                                    (new_index,new_image)
+                                };
+                            } 
+
+
+                        }
+                    }
                     img {
-                        srcset: "{selected_image().srcset().unwrap() }"
+                        srcset: "{selected_image().1.srcset().unwrap() }"
                     }
 
                 }

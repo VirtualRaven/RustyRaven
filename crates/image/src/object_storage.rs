@@ -54,7 +54,7 @@ pub async fn init_bucket() -> Result<(), ObjectStorageError> {
     let s3_config = aws_sdk_s3::config::Builder::new()
         .endpoint_url(endpoint)
         .credentials_provider(cred)
-        .region(Region::new("eu-central-1"))
+        .region(Region::new(dotenvy::var("S3_REGION").unwrap_or("eu-central-1".into())))
         .force_path_style(true) // apply bucketname as path param instead of pre-domain
         .behavior_version_latest()
         .build();

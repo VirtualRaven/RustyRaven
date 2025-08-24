@@ -190,11 +190,13 @@ pub async fn get_previews(
     p: Option<u32>,
     r: bool,
     limit: u32,
+    random: bool,
 ) -> Result<GetPreviewsResp, ServerFnError> {
     let r = GetPreviewsRequest {
         recursive: r,
         category: p,
         limit: std::cmp::min(100, limit),
+        random
     };
     error_logger(db::product::get_previews(r).await)
 }

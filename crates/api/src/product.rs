@@ -74,6 +74,7 @@ pub struct GetPreviewsRequest {
     pub category: Option<u32>,
     pub recursive: bool,
     pub limit: u32,
+    pub random: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

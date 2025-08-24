@@ -161,9 +161,19 @@ pub async fn get_previews(req: GetPreviewsRequest) -> Result<GetPreviewsResp, sq
         names: Option<Vec<String>>,
     }
 
-    let q = query_file_as!(T, "sql/get_previews.sql", &categories, req.limit as i32)
-        .fetch_all(POOL.get().unwrap())
-        .await?;
+    let q = {
+        if req.random
+        {
+            query_file_as!(T, "sql/get_previews_random.sql", &categories, req.limit as i32)
+            .fetch_all(POOL.get().unwrap())
+            .await?
+        }
+        else {
+            query_file_as!(T, "sql/get_previews.sql", &categories, req.limit as i32)
+            .fetch_all(POOL.get().unwrap())
+            .await?
+        }
+    };
 
     let result = q
         .into_iter()

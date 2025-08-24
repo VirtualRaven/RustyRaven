@@ -66,6 +66,17 @@ fn HeaderFooter() -> Element {
         }
     });
 
+    let has_items = use_memo(move || !cart_state.read().is_empty() );
+
+    let banner_class = {
+        if has_items() {
+            "banner visible"
+        }   
+        else {
+            "banner"
+        }
+    };
+
     rsx! {
         document::Link{
             rel: "preconnect",
@@ -81,6 +92,10 @@ fn HeaderFooter() -> Element {
         }
 
         components::Header {}
+        div {
+            class: "{banner_class}",
+            "Fri frakt över 999kr!"
+        }
         div {
             class: "content",
             Outlet::<Route> {}

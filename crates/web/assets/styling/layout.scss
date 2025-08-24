@@ -2,6 +2,7 @@
 
 header {
     position: sticky;
+    z-index: 2;
     top:0;
     background-color: defines.$coolors1;
     border-left: 10px solid defines.$mainbright;

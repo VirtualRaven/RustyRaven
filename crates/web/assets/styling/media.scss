@@ -59,6 +59,24 @@ $layout-breakpoint-split: 1200px;
             padding: 2rem;
         }
     }
+
+    .product-images{
+        display: block !important;
+        .preview, .main {
+            width: 100% !important;
+        }
+        .preview {
+            max-width: unset !important;
+            > div {
+                flex-direction: row !important;
+                .image_container {
+                    display: inline-block;
+                    height: 2rem;
+
+                }
+            }
+        }
+    }
 }
 @media (max-width: 580px)
 {

@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use tracing::info;
+use tracing::{debug, info};
 
 use chrono::{Local, NaiveDateTime, Utc, naive};
 use lazy_static::lazy_static;
@@ -48,7 +48,7 @@ impl ImageCache {
 }
 
 pub async fn add_image(id: ImageId, data: Vec<u8>) {
-    info!("Adding {:?} to cache", id);
+    debug!("Adding {:?} to cache", id);
     assert!((data.len() as u64) < ImageCache::TARGET_SIZE);
     let mut cache = CACHE.lock.write().await;
     cache.cache_size += data.len() as u64;

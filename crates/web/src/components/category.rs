@@ -15,7 +15,7 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
     > = use_resource(move || async move {
         let id = Some(*id.read());
         let cs = get_children(id.clone());
-        let ps = get_previews(id, false, 100);
+        let ps = get_previews(id, false, 100,false);
 
         Ok((cs.await?, ps.await?))
     });
