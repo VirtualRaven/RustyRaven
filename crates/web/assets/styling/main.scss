@@ -144,6 +144,7 @@ button.green {
     display: flex;
     align-items: start;
     .preview {
+        user-select: none;
         > div {
             display: flex;
             flex-direction: column;
@@ -168,6 +169,7 @@ button.green {
         }
     }
     .main {
+
         width:90%;
         display: inline-block;
         .image_container {
@@ -175,6 +177,7 @@ button.green {
             max-height: 80vh;
             position: relative;
             z-index: 0;
+            user-select: none;
             .overlay {
                 > div  {
                     height: 100%;

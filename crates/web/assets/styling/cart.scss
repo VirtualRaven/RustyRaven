@@ -27,7 +27,7 @@
 
 .cart_contents  {
 
-    
+    user-select: none;
     transition: transform 0.2s ease;
     transform: scaleY(0);
     transform-origin: top;
