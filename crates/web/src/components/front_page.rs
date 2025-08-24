@@ -15,7 +15,6 @@ pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element {
     } else {
         let previewr = preview.read();
         let image = previewr.images.first().unwrap();
-        let srcset = image.srcset();
 
         rsx!(
             Link {
@@ -25,7 +24,7 @@ pub fn ProductPreview(preview: ReadOnlySignal<Preview>) -> Element {
                     div {
                         class: "img_container",
                         img {
-                            srcset:  srcset,
+                            src: image.sizes[1].url.clone()  ,
                             onload: move |_|  {loaded.set(true)}
                         }
                     }
