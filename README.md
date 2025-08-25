@@ -1,6 +1,6 @@
 ### E-commerence store in Rust ###
 
-This repository contains the source code for ![sjfconcept.se](https://demo.sjfconcept.se) an E-commerence 
+This repository contains the source code for [sjfconcept.se](https://demo.sjfconcept.se) an E-commerence 
 written in RUST. It is a fast single page site application based on the Dioxus web framework.
 
 The code is split into six crates
