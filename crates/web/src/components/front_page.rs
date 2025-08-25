@@ -48,12 +48,13 @@ fn Latest() -> Element {
     let mut refresh_counter = use_signal(|| 0u32);
 
     use_future(move || async move {
-        loop {
-            info!("Waiting for refresh...");
-            wasmtimer::tokio::sleep(std::time::Duration::from_secs(10)).await;
-            info!("Refreshing");
-            refresh_counter.with_mut(|v| *v + 1);
+        let mut counter = 0u32;
+        while counter < 10 {
+            info!("Waiting for refresh {}",counter);
+            wasmtimer::tokio::sleep(std::time::Duration::from_secs(30)).await;
+            counter = refresh_counter.with_mut(|v| {*v = *v + 1; *v} );
         }
+        info!("Refresh limited");
     });
 
     let previews: Resource<
