@@ -47,7 +47,7 @@ pub enum Route {
     #[end_nest]
     #[route("/om")]
     About {},
-    #[route("/användarvilkor")]
+    #[route("/användarvillkor")]
     TermsAndConditions {},
     #[route("/:..segments")]
     NotFound { segments: Vec<String> },

@@ -3,7 +3,7 @@ use dioxus::{logger::tracing::info, prelude::*};
 #[component]
 pub fn TermsAndConditions() -> Element {
     rsx! {
-        document::Title { "SJF Concept - Vilkor" }
+        document::Title { "SJF Concept - Villkor" }
         div {
             class: "terms",
 

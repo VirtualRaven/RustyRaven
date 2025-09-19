@@ -14,7 +14,7 @@ pub fn Footer() -> Element {
                 li {
                     Link {
                         to: crate::Route::TermsAndConditions {  },
-                        "Frakt & Vilkor"
+                        "Frakt & Villkor"
                     }
                 },
                 li {
