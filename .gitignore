@@ -11,3 +11,4 @@ target/
 kubernetes/cert-manager/
 secret.yaml
 .env
+backup/

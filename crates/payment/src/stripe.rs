@@ -28,13 +28,24 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const MAJOR_VERSION: &str = env!("CARGO_PKG_VERSION_MAJOR");
 const NAME: &str = env!("CARGO_PKG_NAME");
 
+fn api_secret() -> String 
+{
+    dotenvy::var("STRIPE_API_KEY").expect("Missing STRIPE_API_KEY")
+
+}
+
 fn client() -> ::stripe::Client {
-    let secret_key = dotenvy::var("STRIPE_API_KEY").expect("Missing STRIPE_API_KEY");
+    let secret_key = api_secret();
     let client = Client::new(secret_key).with_app_info(NAME.into(), Some(VERSION.into()), None);
 
     client
 }
 
+pub fn is_payment_demo() -> bool
+{
+    let secret= api_secret();
+    secret.contains("test") && !secret.contains("live")
+}
 //struct ShippingOption {
 //    maximum: u32,
 //    minimum: u32,

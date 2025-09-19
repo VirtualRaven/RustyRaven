@@ -53,6 +53,18 @@ pub enum Route {
     NotFound { segments: Vec<String> },
 }
 
+ cfg_if::cfg_if! 
+ {
+     if  #[cfg(feature="server")]
+     {
+        fn is_demo() -> bool { sjf_payment::is_payment_demo() }
+     }
+     else 
+     {
+        fn is_demo() -> bool { false }
+
+     }
+ }
 #[component]
 fn HeaderFooter() -> Element {
     use_context_provider(|| Signal::new(None::<sjf_api::category::GetChildrenRsp>));
@@ -67,6 +79,9 @@ fn HeaderFooter() -> Element {
     });
 
     let has_items = use_memo(move || !cart_state.read().is_empty());
+
+
+    let is_demo_mode = use_server_cached(||  is_demo() );
 
     let banner_class = {
         if has_items() {
@@ -91,6 +106,13 @@ fn HeaderFooter() -> Element {
         }
 
         components::Header {}
+        if is_demo_mode 
+        {
+            div {
+                class: "banner visible",
+                "SIDAN ÄR I DEMOLÄGE!"
+            }
+        }
         div {
             class: "{banner_class}",
             "Fri frakt över 999kr!"
@@ -146,6 +168,22 @@ pub async fn handle_image_get(Path(id): Path<(u32, u32)>) -> impl IntoResponse {
         }
         None => Err(StatusCode::NOT_FOUND),
     }
+}
+#[cfg(feature = "server")]
+pub async fn handle_robots_get() -> impl IntoResponse {
+    use axum::http::header;
+    let headers = [
+        (header::CONTENT_TYPE, "text/plain"),
+    ];
+
+    let robots_txt = match sjf_payment::is_payment_demo()
+    {
+        true => include_str!("server/robots/robots_demo.txt"),
+        false=> include_str!("server/robots/robots.txt")
+    };
+
+    (headers, robots_txt)
+
 }
 
 #[cfg(feature = "server")]
@@ -272,6 +310,7 @@ async fn launch_server() {
 
     let dioxus_router = axum::Router::new()
         .route("/images/:image_id}/:variant_id", get(handle_image_get))
+        .route("/robots.txt", get(handle_robots_get) )
         .serve_dioxus_application(ServeConfigBuilder::new(), App)
         .layer(prometheus_layer)
         .layer(axum::middleware::from_fn(order_middleware))
