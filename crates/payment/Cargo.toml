@@ -1,7 +1,8 @@
 [package]
 name = "sjf_payment"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+authors.workspace = true
+edition.workspace=  true
 
 [dependencies]
 async-stripe = {version="0.41.0", default-features=false, features=["runtime-tokio-hyper-rustls", "checkout","billing","async","stream"] }

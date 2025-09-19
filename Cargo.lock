@@ -4584,7 +4584,7 @@ dependencies = [
 
 [[package]]
 name = "sjf"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "axum",
  "axum-login",
@@ -4614,7 +4614,7 @@ dependencies = [
 
 [[package]]
 name = "sjf_api"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "serde",
  "urlencoding",
@@ -4622,7 +4622,7 @@ dependencies = [
 
 [[package]]
 name = "sjf_auth"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "axum",
  "axum-login",
@@ -4639,7 +4639,7 @@ dependencies = [
 
 [[package]]
 name = "sjf_db"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "dotenvy",
@@ -4656,7 +4656,7 @@ dependencies = [
 
 [[package]]
 name = "sjf_image"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "aws-sdk-s3",
  "chrono",
@@ -4673,7 +4673,7 @@ dependencies = [
 
 [[package]]
 name = "sjf_payment"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "async-stripe",
  "dotenvy",

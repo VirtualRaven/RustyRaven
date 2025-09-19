@@ -2,6 +2,11 @@
 resolver = "2"
 members = ["crates/db","crates/web","crates/image","crates/api","crates/payment","crates/auth"]
 
+[workspace.package]
+version = "1.0.0"
+authors = ["Lukas Rahmn <l.rahmn@gmail.com>"]
+edition = "2024"
+
 [workspace.dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
 log = "0.4.27"
