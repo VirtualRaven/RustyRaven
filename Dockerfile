@@ -1,7 +1,7 @@
 FROM rust:1-alpine3.22 AS builder
 
 RUN apk add musl-dev openssl openssl-libs-static openssl-dev  alpine-sdk pkgconf
-RUN  cargo install dioxus-cli@0.6.3
+RUN  cargo install dioxus-cli@0.6.3 --locked
 RUN mkdir builddir outputdir 
 COPY Cargo.lock Cargo.toml builddir/
 COPY crates/ builddir/crates/

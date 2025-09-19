@@ -1,6 +1,8 @@
 .git/
 .env
 target/
+backup/
+docs/
 .vscode/
 .gitignore
 kubernetes
