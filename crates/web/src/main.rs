@@ -205,6 +205,27 @@ async fn order_middleware(request: Request, next: Next) -> Response {
     let response = next.run(request).await;
     response
 }
+#[cfg(feature = "server")]
+async fn accept_fix(mut request: Request, next: Next) -> Response {
+    if let Some(accept) = request.headers_mut().get_mut("Accept")
+    {
+        if let Ok(str) = accept.to_str()
+        {
+            if str.contains("*/*")
+            {
+                use axum::http::HeaderValue;
+
+                let fixed = format!("{}, text/html",str);
+                if let Ok(patched) = HeaderValue::from_str(&fixed)
+                {
+                    *accept = patched;
+                }
+            }
+        }
+    }
+    let response = next.run(request).await;
+    response
+}
 
 #[cfg(feature = "server")]
 mod metrics {
@@ -313,6 +334,7 @@ async fn launch_server() {
         .route("/robots.txt", get(handle_robots_get) )
         .serve_dioxus_application(ServeConfigBuilder::new(), App)
         .layer(prometheus_layer)
+        .layer(axum::middleware::from_fn(accept_fix))
         .layer(axum::middleware::from_fn(order_middleware))
         .layer(axum::middleware::from_fn(
             sjf_auth::axum::protect_authenticated_routes,
