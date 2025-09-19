@@ -59,8 +59,9 @@ fn Latest() -> Element {
 
     let previews: Resource<
         Result<(sjf_api::product::GetPreviewsResp, Preview, Image), ServerFnError>,
-    > = use_resource(move || async move {
+    > = use_server_future(move || {
         let _ = refresh_counter.read();
+        async move {
         let res = server::get_previews(None, true, 12, true).await?;
 
         use rand::distr::Distribution;
@@ -83,7 +84,7 @@ fn Latest() -> Element {
         let highlighted_image = highlight.images[random_image_index].clone();
 
         Ok((res, highlight, highlighted_image))
-    });
+    }})?;
 
     match &*previews.read_unchecked() {
         Some(Ok((rsp, highlight, highlighted_image))) => rsx! {

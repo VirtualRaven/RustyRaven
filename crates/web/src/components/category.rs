@@ -12,13 +12,15 @@ pub fn Category(category_path: ReadOnlySignal<Vec<String>>, id: ReadOnlySignal<u
             ),
             ServerFnError,
         >,
-    > = use_resource(move || async move {
+    > = use_server_future(move || {
+        let id = id.clone();
+        async move {
         let id = Some(*id.read());
         let cs = get_children(id.clone());
         let ps = get_previews(id, false, 100, false);
 
         Ok((cs.await?, ps.await?))
-    });
+    }})?;
 
     rsx! {
         document::Title { "SJF Concept - {category_path.last().unwrap() }" }

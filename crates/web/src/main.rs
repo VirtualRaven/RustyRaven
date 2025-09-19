@@ -337,13 +337,12 @@ fn NotFound(segments: Vec<String>) -> Element {
 #[component]
 fn ProductPage(segments: ReadOnlySignal<Vec<String>>) -> Element {
     let error_msg = "Ooops här var det tomt, möjligen kan produkten plockats bort";
-    let product = use_resource({
-        to_owned![segments];
+    let product = use_server_future(
         move || {
-            to_owned![segments];
+            let segments = segments.clone();
             async move { get_category_and_product(segments().join("/")).await }
         }
-    });
+    )?;
 
     match *product.read_unchecked() {
         None => rsx! {

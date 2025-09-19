@@ -14,7 +14,7 @@ pub type CategorySignal = Signal<Option<GetChildrenRsp>>;
 
 #[component]
 pub fn DynamicMenu() -> Element {
-    let categories = use_resource(|| async move { server::category::get_children(None).await });
+    let categories = use_server_future(|| async move { server::category::get_children(None).await })?;
 
     let mut context = use_context::<CategorySignal>();
 
