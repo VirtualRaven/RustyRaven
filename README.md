@@ -1,7 +1,7 @@
-### E-ecommerce store in Rust ###
+### WebShop in Rust ###
 
-This repository contains the source code for [sjfconcept.se](https://www.sjfconcept.se) an E-ecommerce 
-written in RUST. It is a fast single page site application based on the Dioxus web framework.
+This repository contains the source code for [sjfconcept.se](https://www.sjfconcept.se) a Web shop 
+written in Rust. It is a fast single page site application based on the Dioxus web framework.
 
 The code is split into six crates
 * Web - The main crate which contains the Dioxus UI components. This crate has two rust features,
